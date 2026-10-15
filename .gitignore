@@ -1,0 +1,25 @@
+# Local Windows Node binaries & scripts
+node.exe
+node_modules/
+npm
+npm.cmd
+npm.ps1
+npx
+npx.cmd
+npx.ps1
+corepack
+corepack.cmd
+nodevars.bat
+install_tools.bat
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment and OS
+.env
+.env.local
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

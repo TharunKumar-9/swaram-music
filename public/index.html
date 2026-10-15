@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Swaram — Retro Music Player (Tollywood Edition)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Cinzel:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=2.7">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ff3366'><path d='M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z'/></svg>">
+</head>
+<body class="theme-amoled">
+
+  <!-- Dynamic Ambient Glow Backdrop (Driven by Album Art Color Extractor) -->
+  <div id="ambient-glow" class="ambient-glow"></div>
+
+  <!-- Main App Shell -->
+  <div class="app-layout">
+
+    <!-- Offline Notification Banner -->
+    <div id="offline-banner" class="offline-banner hidden">
+      <div class="offline-banner-content">
+        <span class="offline-status-dot"></span>
+        <span>⚡ <strong>Offline Mode:</strong> No internet connection. Playing from your local offline downloads.</span>
+      </div>
+      <button id="offline-view-btn" class="offline-banner-btn">Go to Offline Downloads</button>
+    </div>
+
+    <!-- Top Navigation Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="brand">
+          <div class="brand-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <span class="brand-name">SWARAM</span>
+            <span class="brand-tag">PAN-INDIA MUSIC</span>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-container">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="global-search" placeholder="Search any song: Bollywood, Tollywood, Tamil, Kannada, Malayalam, Arijit, Anirudh..." autocomplete="off">
+          <button id="search-clear-btn" class="search-clear hidden">&times;</button>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs (Retro Music Style) -->
+      <nav class="nav-tabs">
+        <button class="nav-tab active" data-tab="home">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+          <span>Home</span>
+        </button>
+        <button class="nav-tab" data-tab="songs">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+          <span>Songs</span>
+        </button>
+        <button class="nav-tab" data-tab="albums">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg>
+          <span>Albums</span>
+        </button>
+        <button class="nav-tab" data-tab="artists">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          <span>Heroes & Stars</span>
+        </button>
+        <button class="nav-tab" data-tab="playlists">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+          <span>Library</span>
+        </button>
+        <button class="nav-tab nav-tab-history" data-tab="history">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <span>History</span>
+          <span class="nav-badge" id="nav-history-count">0</span>
+        </button>
+        <button class="nav-tab nav-tab-downloads" data-tab="downloads">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span>Downloads</span>
+          <span class="nav-badge" id="nav-downloads-count">0</span>
+        </button>
+        <button class="nav-tab nav-tab-youtube" data-tab="youtube">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          <span>YouTube Live</span>
+        </button>
+      </nav>
+
+      <!-- Header Right Controls -->
+      <div class="header-right">
+        <!-- User Profile & Privacy Account Button -->
+        <button id="account-btn" class="account-btn" title="Privacy Profile & Accounts">
+          <span id="account-avatar" class="account-avatar">🎧</span>
+          <span id="account-name" class="account-name">My Profile</span>
+          <span id="account-lock-badge" class="account-lock-badge hidden" title="Protected with Privacy PIN">🔒</span>
+        </button>
+
+        <!-- Theme Dropdown -->
+        <div class="theme-selector-container">
+          <button id="theme-btn" class="icon-btn" title="Switch Theme">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+          </button>
+          <div id="theme-dropdown" class="dropdown-menu hidden">
+            <div class="dropdown-item active" data-theme="amoled">🖤 Velvet AMOLED</div>
+            <div class="dropdown-item" data-theme="material-dark">🌌 Material Dark</div>
+            <div class="dropdown-item" data-theme="spotify">🟢 Spotify Emerald</div>
+            <div class="dropdown-item" data-theme="gaana">🔴 Gaana Crimson</div>
+            <div class="dropdown-item" data-theme="gold">👑 Tollywood Gold</div>
+          </div>
+        </div>
+
+        <!-- Quality Indicator Pill -->
+        <div id="quality-badge" class="quality-badge" title="Streaming Bitrate">HQ 320k</div>
+
+        <!-- Up Next Queue Toggle -->
+        <button id="header-queue-btn" class="icon-btn" title="Up Next Queue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>
+          <span id="queue-badge-count" class="queue-badge-count">0</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Viewport Area -->
+    <main class="main-viewport">
+
+      <!-- ================= TAB 1: HOME ================= -->
+      <section id="view-home" class="tab-view active">
+        <!-- Hero Spotlight Banner -->
+        <div class="hero-banner">
+          <div class="hero-overlay"></div>
+          <div class="hero-content">
+            <span class="hero-tag">🔥 FEATURED BLOCKBUSTER</span>
+            <h1 class="hero-title" id="hero-title">Pushpa 2: The Rule</h1>
+            <p class="hero-subtitle" id="hero-subtitle">Allu Arjun, Rashmika Mandanna • Devi Sri Prasad (DSP)</p>
+            <div class="hero-actions">
+              <button id="hero-play-btn" class="btn btn-primary">
+                <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <span>Play Album</span>
+              </button>
+              <button id="hero-queue-btn" class="btn btn-secondary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
+                <span>Add to Queue</span>
+              </button>
+              <button id="hero-yt-btn" class="btn btn-youtube">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                <span>Watch on YouTube</span>
+              </button>
+            </div>
+          </div>
+          <div class="hero-art-container">
+            <img id="hero-art" src="https://c.saavncdn.com/366/Pushpa-2-The-Rule-Telugu-Telugu-2024-20241205211012-500x500.jpg" alt="Featured Album Art" class="hero-art">
+          </div>
+        </div>
+
+        <!-- Cinema & Industry Filter Bar -->
+        <div class="category-block-header">
+          <span class="category-block-label">🎬 SELECT CINEMA / INDUSTRY (PAN-INDIA)</span>
+        </div>
+        <div class="category-chips-bar" id="industry-chips">
+          <!-- Populated by JS: All India, Tollywood, Bollywood, Kollywood, Sandalwood, Mollywood, Punjabi -->
+        </div>
+
+        <!-- Song Types & Moods Pills Bar -->
+        <div class="category-block-header">
+          <span class="category-block-label">🎶 CHOOSE YOUR VIBE / SONG TYPE</span>
+        </div>
+        <div class="category-chips-bar" id="mood-chips">
+          <!-- Populated by JS: Melody, Energetic, Anger, Gym, Motivation, Love, Breakup -->
+        </div>
+
+        <!-- Singer & Composer Pills Bar -->
+        <div class="category-block-header">
+          <span class="category-block-label">🎤 TOP SINGERS & MUSIC DIRECTORS</span>
+        </div>
+        <div class="category-chips-bar" id="singer-chips">
+          <!-- Populated by JS: Arijit, Anirudh, Thaman, Sai Abhyankkar, Pritam, Rahman, Diljit, etc. -->
+        </div>
+
+        <!-- Section: Recently Played (Last 20 Songs) -->
+        <div class="section-container" id="home-history-section" style="display: none;">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">🕒 Recently Played (Last 20 Songs)</h2>
+              <p class="section-subtitle">Pick up right where you left off</p>
+            </div>
+            <button class="view-all-btn" id="home-view-history-btn">View All</button>
+          </div>
+          <div class="cards-carousel" id="history-carousel">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Section 1: Trending Now in India -->
+        <div class="section-container">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">Trending Across India</h2>
+              <p class="section-subtitle" id="trending-subtitle">Pan-Indian chartbusters across Bollywood, Tollywood, Kollywood & Sandalwood</p>
+            </div>
+            <button class="view-all-btn" data-action="view-all-trending">View All</button>
+          </div>
+          <div class="cards-carousel" id="trending-carousel">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Section 2: Tollywood Chartbusters (Telugu) -->
+        <div class="section-container">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">🦁 Tollywood Chartbusters (Telugu)</h2>
+              <p class="section-subtitle">Pushpa 2, Devara, Kalki, Guntur Kaaram, Saripodhaa Sanivaaram & Telugu hits</p>
+            </div>
+            <button class="view-all-btn" data-category="telugu_hits">See More</button>
+          </div>
+          <div class="cards-carousel" id="telugu-carousel">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Section 3: Bollywood Mega Blockbusters (Hindi) -->
+        <div class="section-container">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">👑 Bollywood Blockbusters</h2>
+              <p class="section-subtitle">Stree 2, Animal, Jawan, Arijit Singh, Pritam & Hindi hits</p>
+            </div>
+            <button class="view-all-btn" data-category="bollywood_hits">See More</button>
+          </div>
+          <div class="cards-carousel" id="bollywood-carousel">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Section 3: Kollywood Thunder (Tamil) -->
+        <div class="section-container">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">⚡ Kollywood Thunder (Tamil)</h2>
+              <p class="section-subtitle">Leo, Jailer, Vikram, Anirudh & AR Rahman Tamil hits</p>
+            </div>
+            <button class="view-all-btn" data-category="kollywood_hits">See More</button>
+          </div>
+          <div class="cards-carousel" id="kollywood-carousel">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Section 4: Sandalwood Fire (Kannada) -->
+        <div class="section-container">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">🌲 Sandalwood Fire (Kannada)</h2>
+              <p class="section-subtitle">KGF Chapter 1 & 2, Kantara, Salaar & Ravi Basrur anthems</p>
+            </div>
+            <button class="view-all-btn" data-category="sandalwood_hits">See More</button>
+          </div>
+          <div class="cards-carousel" id="sandalwood-carousel">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Section 5: Mollywood Vibes (Malayalam) -->
+        <div class="section-container">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">🌊 Mollywood Vibes (Malayalam)</h2>
+              <p class="section-subtitle">Aavesham (Illuminati), Manjummel Boys, Premalu & Sushin Shyam</p>
+            </div>
+            <button class="view-all-btn" data-category="mollywood_hits">See More</button>
+          </div>
+          <div class="cards-carousel" id="mollywood-carousel">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Section 6: Punjabi & Indie Pop Hits -->
+        <div class="section-container">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">🚀 Punjabi Pop & Banging Beats</h2>
+              <p class="section-subtitle">Diljit Dosanjh, Karan Aujla, Tauba Tauba & AP Dhillon</p>
+            </div>
+            <button class="view-all-btn" data-category="ind_punjabi">See More</button>
+          </div>
+          <div class="cards-carousel" id="punjabi-carousel">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Section 7: Anirudh Ravichander Blockbusters -->
+        <div class="section-container">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">🎧 Anirudh Ravichander Phenomenon</h2>
+              <p class="section-subtitle">Leo, Devara, Jailer, Vikram & Jawan</p>
+            </div>
+            <button class="view-all-btn" data-category="anirudh">See More</button>
+          </div>
+          <div class="cards-carousel" id="anirudh-carousel">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Section 8: Thaman S Chartbusters -->
+        <div class="section-container">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">👑 Thaman S Musical Storm</h2>
+              <p class="section-subtitle">Ala Vaikunthapurramuloo, Guntur Kaaram, Bheemla Nayak</p>
+            </div>
+            <button class="view-all-btn" data-category="thaman">See More</button>
+          </div>
+          <div class="cards-carousel" id="thaman-carousel">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Section 9: Sai Abhyankkar Viral Hits -->
+        <div class="section-container">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">✨ Sai Abhyankkar & Viral Sensations</h2>
+              <p class="section-subtitle">Katchi Sera, Aasa Kooda & indie pop sensations</p>
+            </div>
+            <button class="view-all-btn" data-category="sai_abhyankkar">See More</button>
+          </div>
+          <div class="cards-carousel" id="sai-carousel">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Section 5: Devi Sri Prasad (DSP) Energetic Hits -->
+        <div class="section-container">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">⚡ Rockstar DSP Bangers</h2>
+              <p class="section-subtitle">High-voltage energy tracks by Devi Sri Prasad</p>
+            </div>
+            <button class="view-all-btn" data-category="dsp">See More</button>
+          </div>
+          <div class="cards-carousel" id="dsp-carousel">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Section 6: Soulful Telugu Melodies -->
+        <div class="section-container">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">💖 Soulful Melodies</h2>
+              <p class="section-subtitle">Heartwarming tunes from Hi Nanna, Sita Ramam, Radhe Shyam & more</p>
+            </div>
+            <button class="view-all-btn" data-category="melody">See More</button>
+          </div>
+          <div class="cards-carousel" id="melody-carousel">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Section 7: Energetic & Mass Dance -->
+        <div class="section-container">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">⚡ High-Energy & Mass Beats</h2>
+              <p class="section-subtitle">Pushpa Pushpa, Kurchi Madathapetti, Naatu Naatu</p>
+            </div>
+            <button class="view-all-btn" data-category="energetic">See More</button>
+          </div>
+          <div class="cards-carousel" id="energetic-carousel">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Section 8: Anger & Fierce Hero Anthems -->
+        <div class="section-container">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">🔥 Roaring Anger & Action Anthems</h2>
+              <p class="section-subtitle">Fear Song, Akhanda, Komuram Bheemudo & intense themes</p>
+            </div>
+            <button class="view-all-btn" data-category="anger">See More</button>
+          </div>
+          <div class="cards-carousel" id="anger-carousel">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Section 9: Gym Workout & Power Pump -->
+        <div class="section-container">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">💪 Tollywood Gym & Workout Pump</h2>
+              <p class="section-subtitle">High BPM, heavy bass motivation to smash your PRs</p>
+            </div>
+            <button class="view-all-btn" data-category="gym">See More</button>
+          </div>
+          <div class="cards-carousel" id="gym-carousel">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Section 10: Motivation & Rise -->
+        <div class="section-container">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">🎯 Motivation & Conquest</h2>
+              <p class="section-subtitle">Inspirational life anthems to conquer the world</p>
+            </div>
+            <button class="view-all-btn" data-category="motivation">See More</button>
+          </div>
+          <div class="cards-carousel" id="motivation-carousel">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Section 11: Love & Romantic Duets -->
+        <div class="section-container">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">🌹 Pure Love & Romantic Duets</h2>
+              <p class="section-subtitle">Chuttamalle, Butta Bomma, Vachindamma</p>
+            </div>
+            <button class="view-all-btn" data-category="love">See More</button>
+          </div>
+          <div class="cards-carousel" id="love-carousel">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Section 12: Breakup & Emotional Pain -->
+        <div class="section-container">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">💔 Breakup & Emotional Depth</h2>
+              <p class="section-subtitle">Oosupodu, My Love Is Gone, Telusuna Telusuna</p>
+            </div>
+            <button class="view-all-btn" data-category="breakup">See More</button>
+          </div>
+          <div class="cards-carousel" id="breakup-carousel">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Section 13: Golden Era Telugu Classics -->
+        <div class="section-container">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">📻 90s & 2000s Evergreen Nostalgia</h2>
+              <p class="section-subtitle">Timeless Telugu classics from Kushi, Pokiri, Okkadu, Athadu</p>
+            </div>
+            <button class="view-all-btn" data-category="classics">See More</button>
+          </div>
+          <div class="cards-carousel" id="classics-carousel">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 2: SONGS ================= -->
+      <section id="view-songs" class="tab-view">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Pan-India Songs & Soundtracks</h1>
+            <p class="view-subtitle" id="songs-count-subtitle">Explore top hits across Bollywood, Tollywood, Kollywood, Sandalwood & Mollywood</p>
+          </div>
+          <div class="view-actions">
+            <button id="play-all-songs-btn" class="btn btn-primary">
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <span>Play All</span>
+            </button>
+            <button id="shuffle-all-songs-btn" class="btn btn-secondary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+              <span>Shuffle</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Dedicated Language Category Filter Bar in Songs Tab -->
+        <div class="songs-lang-container">
+          <div class="songs-lang-label">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+            <span>CATEGORIZE BY LANGUAGE:</span>
+          </div>
+          <div class="songs-lang-chips" id="songs-lang-chips">
+            <button class="songs-lang-chip active" data-lang="all">🌐 All Languages</button>
+            <button class="songs-lang-chip" data-lang="telugu">🦁 Tollywood (Telugu)</button>
+            <button class="songs-lang-chip" data-lang="hindi">👑 Bollywood (Hindi)</button>
+            <button class="songs-lang-chip" data-lang="tamil">⚡ Kollywood (Tamil)</button>
+            <button class="songs-lang-chip" data-lang="kannada">🌲 Sandalwood (Kannada)</button>
+            <button class="songs-lang-chip" data-lang="malayalam">🌊 Mollywood (Malayalam)</button>
+            <button class="songs-lang-chip" data-lang="punjabi">🚀 Punjabi Pop</button>
+          </div>
+        </div>
+
+        <div class="songs-table-container">
+          <table class="songs-table">
+            <thead>
+              <tr>
+                <th class="col-num">#</th>
+                <th class="col-title">TITLE</th>
+                <th class="col-movie">MOVIE / ALBUM</th>
+                <th class="col-artists">SINGERS</th>
+                <th class="col-time">TIME</th>
+                <th class="col-actions"></th>
+              </tr>
+            </thead>
+            <tbody id="all-songs-tbody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ================= TAB 3: ALBUMS ================= -->
+      <section id="view-albums" class="tab-view">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Blockbuster Movie Albums</h1>
+            <p class="view-subtitle">Full soundtrack collections across Indian cinema</p>
+          </div>
+        </div>
+        <div class="cards-grid" id="albums-grid">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- ================= TAB 4: ARTISTS & HEROES ================= -->
+      <section id="view-artists" class="tab-view">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Indian Superstars & Music Maestros</h1>
+            <p class="view-subtitle">Iconic filmographies & legendary music composers</p>
+          </div>
+        </div>
+        <div class="artists-grid" id="artists-grid">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- ================= TAB 5: LIBRARY & PLAYLISTS ================= -->
+      <section id="view-playlists" class="tab-view">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Your Music Library</h1>
+            <p class="view-subtitle">Liked songs, custom playlists & recent history</p>
+          </div>
+          <button id="new-playlist-btn" class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span>Create Playlist</span>
+          </button>
+        </div>
+
+        <div class="library-sections">
+          <div class="library-hero-cards">
+            <!-- Liked Songs Banner Card -->
+            <div class="liked-songs-hero-card" id="liked-songs-card">
+              <div class="liked-hero-icon">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+              </div>
+              <div class="liked-hero-info">
+                <span class="liked-hero-badge">AUTO PLAYLIST</span>
+                <h2 class="liked-hero-title">Liked Songs</h2>
+                <p class="liked-hero-count" id="liked-count-text">0 favorite songs</p>
+                <button class="btn btn-primary" id="play-liked-btn">Play Favorites</button>
+              </div>
+            </div>
+
+            <!-- Listening History Hero Card -->
+            <div class="history-hero-card" id="history-library-card">
+              <div class="history-hero-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              </div>
+              <div class="history-hero-info">
+                <span class="history-hero-badge">RECENT ACTIVITY</span>
+                <h2 class="history-hero-title">Listening History</h2>
+                <p class="history-hero-count" id="history-library-count-text">0 / 20 recent songs played</p>
+                <div class="history-hero-actions">
+                  <button class="btn btn-primary" id="play-history-btn">Play History</button>
+                  <button class="btn btn-secondary" id="view-history-tab-btn">View All</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- User Created Playlists Grid -->
+          <div class="playlists-container">
+            <h3 class="section-title">Custom Playlists</h3>
+            <div class="cards-grid" id="custom-playlists-grid">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB: LISTENING HISTORY ================= -->
+      <section id="view-history" class="tab-view">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Listening History</h1>
+            <p class="view-subtitle" id="history-summary-subtitle">Last 0 of 20 played tracks</p>
+          </div>
+          <div class="view-actions">
+            <button id="play-all-history-btn" class="btn btn-primary">
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <span>Play All</span>
+            </button>
+            <button id="shuffle-all-history-btn" class="btn btn-secondary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+              <span>Shuffle</span>
+            </button>
+            <button id="clear-all-history-btn" class="btn btn-outline-danger" title="Clear listening history">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              <span>Clear History</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="history-empty-state" id="history-empty-state">
+          <div class="empty-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          </div>
+          <h3>No Listening History Yet</h3>
+          <p>Songs you stream will automatically appear here (strictly keeping your last 20 played tracks).</p>
+          <button class="btn btn-primary" id="history-explore-btn">Start Listening</button>
+        </div>
+
+        <!-- History Table -->
+        <div class="songs-table-container" id="history-table-container" style="display:none;">
+          <table class="songs-table">
+            <thead>
+              <tr>
+                <th class="col-num">#</th>
+                <th class="col-title">TITLE</th>
+                <th class="col-movie">MOVIE / ALBUM</th>
+                <th class="col-artists">SINGERS</th>
+                <th class="col-time">TIME</th>
+                <th class="col-actions">ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody id="history-tbody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ================= TAB: OFFLINE DOWNLOADS ================= -->
+      <section id="view-downloads" class="tab-view">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Offline Music Storage</h1>
+            <p class="view-subtitle" id="downloads-summary-subtitle">0 songs saved for offline playback • 0 MB</p>
+          </div>
+          <div class="view-actions">
+            <button id="play-all-downloads-btn" class="btn btn-primary">
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <span>Play All Offline</span>
+            </button>
+            <button id="shuffle-all-downloads-btn" class="btn btn-secondary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+              <span>Shuffle</span>
+            </button>
+            <button id="clear-all-downloads-btn" class="btn btn-secondary" title="Remove all songs from local offline storage">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              <span>Clear All</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="downloads-empty-state" id="downloads-empty-state">
+          <div class="empty-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          </div>
+          <h3>No Offline Songs Yet</h3>
+          <p>Tap the download button (📥) on any song or in the Now Playing player to listen anytime without internet.</p>
+          <button class="btn btn-primary" id="downloads-explore-btn">Browse Top Trending Songs</button>
+        </div>
+
+        <!-- Downloads Table -->
+        <div class="songs-table-container" id="downloads-table-container" style="display:none;">
+          <table class="songs-table">
+            <thead>
+              <tr>
+                <th class="col-num">#</th>
+                <th class="col-title">TITLE</th>
+                <th class="col-movie">MOVIE / ALBUM</th>
+                <th class="col-artists">SINGERS</th>
+                <th class="col-time">STORAGE</th>
+                <th class="col-actions">ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody id="downloads-tbody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ================= TAB 6: YOUTUBE LIVE SEARCH ================= -->
+      <section id="view-youtube" class="tab-view">
+        <div class="youtube-view-header">
+          <div class="youtube-badge-row">
+            <svg viewBox="0 0 24 24" fill="#ff0000" class="yt-logo-icon"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+            <div>
+              <h1 class="view-title">YouTube Pan-India Live</h1>
+              <p class="view-subtitle">Official video songs, lyrical videos & live concerts across Indian cinema</p>
+            </div>
+          </div>
+          <div class="yt-search-bar-row">
+            <input type="text" id="yt-search-input" placeholder="Search YouTube for any song, lyrical video, or concert across languages..." autocomplete="off">
+            <button id="yt-search-btn" class="btn btn-youtube">Search YouTube</button>
+          </div>
+          <div class="yt-filter-chips">
+            <button class="yt-filter-chip active" data-q="pan india top hit songs 2024">🔥 Pan-India Hits</button>
+            <button class="yt-filter-chip" data-q="bollywood top hit songs 2024">👑 Bollywood</button>
+            <button class="yt-filter-chip" data-q="tamil top hit songs 2024">⚡ Kollywood Tamil</button>
+            <button class="yt-filter-chip" data-q="kannada top hit songs 2024">🌲 Sandalwood Kannada</button>
+            <button class="yt-filter-chip" data-q="telugu top hit songs 2024">🦁 Tollywood Telugu</button>
+            <button class="yt-filter-chip" data-q="malayalam top hit songs 2024">🌊 Mollywood Malayalam</button>
+            <button class="yt-filter-chip" data-q="punjabi top hit songs 2024">🚀 Punjabi Pop</button>
+            <button class="yt-filter-chip" data-q="anirudh live concert songs">🎸 Anirudh Live</button>
+            <button class="yt-filter-chip" data-q="arijit singh live concert songs">🎤 Arijit Singh</button>
+          </div>
+        </div>
+
+        <div class="youtube-grid" id="youtube-grid">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- ================= SEARCH RESULTS MODAL / VIEW ================= -->
+      <section id="view-search-results" class="tab-view">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Search Results</h1>
+            <p class="view-subtitle" id="search-query-subtitle">Showing results</p>
+          </div>
+        </div>
+        <div class="search-sections">
+          <div class="search-category-block">
+            <h3 class="section-title">Songs</h3>
+            <div class="songs-table-container">
+              <table class="songs-table">
+                <tbody id="search-songs-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="search-category-block">
+            <h3 class="section-title">Albums & Soundtracks</h3>
+            <div class="cards-grid" id="search-albums-grid"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= DETAIL VIEW: ALBUM / ARTIST ================= -->
+      <section id="view-detail" class="tab-view">
+        <div class="detail-hero">
+          <img id="detail-cover" src="" alt="Cover" class="detail-cover">
+          <div class="detail-info">
+            <span class="detail-tag" id="detail-tag">ALBUM</span>
+            <h1 class="detail-title" id="detail-title">Album Name</h1>
+            <p class="detail-desc" id="detail-desc">Artist & details</p>
+            <div class="detail-actions">
+              <button class="btn btn-primary" id="detail-play-btn">
+                <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <span>Play All</span>
+              </button>
+              <button class="btn btn-primary" id="detail-add-songs-btn" style="display:none;">+ Add Songs</button>
+              <button class="btn btn-secondary" id="detail-queue-btn">Add to Queue</button>
+              <button class="btn btn-secondary" id="detail-rename-btn" style="display:none;">Rename</button>
+              <button class="btn btn-outline-danger" id="detail-delete-btn" style="display:none;">Delete Playlist</button>
+              <button class="btn btn-secondary" id="detail-back-btn">&larr; Back</button>
+            </div>
+          </div>
+        </div>
+        <div class="songs-table-container">
+          <table class="songs-table">
+            <thead>
+              <tr>
+                <th class="col-num">#</th>
+                <th class="col-title">TITLE</th>
+                <th class="col-movie">MOVIE</th>
+                <th class="col-artists">ARTISTS</th>
+                <th class="col-time">TIME</th>
+                <th class="col-actions"></th>
+              </tr>
+            </thead>
+            <tbody id="detail-songs-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- Embedded Playlist Song Search & Quick-Add Panel -->
+        <div id="playlist-add-section" class="playlist-add-section" style="display:none;">
+          <div class="playlist-add-header">
+            <div>
+              <h2 class="playlist-add-title" id="playlist-add-heading">Find & Add Songs to Playlist</h2>
+              <p class="playlist-add-subtitle">Search any song across Indian cinema or choose from trending hits below to add with 1 click</p>
+            </div>
+          </div>
+          
+          <div class="playlist-search-box">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="playlist-search-input" placeholder="Search songs, movies, singers (e.g. Pushpa, Devara, Stree 2, Arijit, Anirudh)..." autocomplete="off">
+            <button id="playlist-search-clear" class="search-clear hidden">&times;</button>
+          </div>
+
+          <!-- Quick category chips inside playlist add section -->
+          <div class="playlist-quick-chips" id="playlist-quick-chips">
+            <button class="category-chip active" data-source="trending">🔥 All Trending</button>
+            <button class="category-chip" data-source="tollywood">🎬 Tollywood</button>
+            <button class="category-chip" data-source="bollywood_hits">👑 Bollywood</button>
+            <button class="category-chip" data-source="kollywood_hits">⚡ Kollywood</button>
+            <button class="category-chip" data-source="sandalwood_hits">🌲 Sandalwood</button>
+            <button class="category-chip" data-source="melody">🎶 Melodies</button>
+            <button class="category-chip" data-source="energetic">⚡ Energetic</button>
+            <button class="category-chip" data-source="love">🌹 Love</button>
+          </div>
+
+          <!-- Quick-add list -->
+          <div class="playlist-search-results" id="playlist-search-results">
+            <!-- Populated dynamically with songs + instant add button -->
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ================= FLOATING MINI PLAYER (RETRO MUSIC SIGNATURE PILL) ================= -->
+    <div id="retro-mini-player" class="retro-mini-player hidden">
+      <!-- Mini Progress Line -->
+      <div class="mini-progress-bar-container">
+        <div id="mini-progress-fill" class="mini-progress-fill"></div>
+      </div>
+
+      <div class="mini-player-body">
+        <!-- Artwork & Track Info (Tap to expand full screen) -->
+        <div class="mini-track-info" id="mini-expand-trigger" title="Tap to expand Now Playing">
+          <div class="mini-art-wrapper">
+            <img id="mini-art" src="" alt="Now Playing" class="mini-art">
+            <div class="mini-art-vinyl-ring"></div>
+          </div>
+          <div class="mini-text-wrap">
+            <div class="mini-title-marquee">
+              <span id="mini-title" class="mini-title">Select a Song</span>
+            </div>
+            <span id="mini-artist" class="mini-artist">Tollywood Music</span>
+          </div>
+        </div>
+
+        <!-- Quick Controls -->
+        <div class="mini-controls">
+          <!-- Like Button -->
+          <button id="mini-like-btn" class="mini-btn" title="Like Song">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          </button>
+
+          <!-- Prev Button -->
+          <button id="mini-prev-btn" class="mini-btn" title="Previous Song">
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2"></line></svg>
+          </button>
+
+          <!-- Play/Pause Button (Circular with pulse) -->
+          <button id="mini-play-btn" class="mini-play-btn" title="Play/Pause">
+            <svg id="mini-play-icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <svg id="mini-pause-icon" viewBox="0 0 24 24" fill="currentColor" class="hidden"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+          </button>
+
+          <!-- Next Button -->
+          <button id="mini-next-btn" class="mini-btn" title="Next Song">
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2"></line></svg>
+          </button>
+
+          <!-- Full Screen Chevron -->
+          <button id="mini-expand-btn" class="mini-btn mini-expand-icon" title="Expand Full Screen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"></polyline></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= FULL-SCREEN NOW PLAYING SHEET (RETRO MUSIC SIGNATURE) ================= -->
+    <div id="now-playing-sheet" class="now-playing-sheet">
+      <div class="sheet-backdrop"></div>
+      
+      <div class="sheet-content">
+        <!-- Sheet Top Bar -->
+        <div class="sheet-header">
+          <button id="sheet-close-btn" class="icon-btn" title="Collapse">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          <div class="sheet-header-title">
+            <span class="sheet-playing-label">NOW PLAYING</span>
+            <span id="sheet-source-badge" class="sheet-source-badge">⚡ HQ 320k Audio</span>
+          </div>
+          <div class="sheet-header-actions">
+            <button id="sheet-playlist-btn" class="icon-btn" title="Add to Playlist">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h7M3 6h.01M3 12h.01M3 18h.01M18 15v6m-3-3h6"></path></svg>
+            </button>
+            <button id="sheet-download-btn" class="icon-btn" title="Download for Offline">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            </button>
+            <button id="sheet-like-btn" class="icon-btn" title="Save to Favorites">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Center View Mode Pills (Artwork / Vinyl / Lyrics / YouTube Video) -->
+        <div class="view-mode-selector">
+          <button class="mode-pill active" data-mode="art">Artwork</button>
+          <button class="mode-pill" data-mode="vinyl">Vinyl</button>
+          <button class="mode-pill" data-mode="lyrics">Lyrics</button>
+          <button class="mode-pill mode-pill-yt" data-mode="youtube">YouTube Video</button>
+        </div>
+
+        <!-- Center Stage: Artwork / Vinyl / Video / Lyrics -->
+        <div class="sheet-center-stage">
+          
+          <!-- Mode 1: Standard Artwork with Ambient Shadow -->
+          <div id="mode-art-view" class="center-mode-view active">
+            <div class="art-glow-frame">
+              <img id="sheet-art" src="" alt="Album Artwork" class="sheet-art">
+            </div>
+          </div>
+
+          <!-- Mode 2: Retro Vinyl Spinning Disc -->
+          <div id="mode-vinyl-view" class="center-mode-view">
+            <div class="vinyl-container">
+              <div class="vinyl-sleeve">
+                <img id="sheet-vinyl-sleeve-art" src="" alt="Sleeve Art">
+              </div>
+              <div id="vinyl-disc" class="vinyl-disc">
+                <div class="vinyl-grooves"></div>
+                <div class="vinyl-label">
+                  <img id="sheet-vinyl-label-art" src="" alt="Disc Art">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mode 3: Synced / Scrolling Lyrics -->
+          <div id="mode-lyrics-view" class="center-mode-view">
+            <div class="lyrics-scroll-container" id="lyrics-container">
+              <div class="lyrics-loading">Loading Telugu lyrics...</div>
+            </div>
+          </div>
+
+          <!-- Mode 4: Embedded YouTube Player -->
+          <div id="mode-youtube-view" class="center-mode-view">
+            <div class="youtube-player-frame">
+              <div id="yt-iframe-placeholder"></div>
+              <div id="yt-status-msg" class="yt-status-msg">Click play to watch official YouTube video</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Audio Frequency Visualizer Canvas -->
+        <div class="visualizer-wrapper">
+          <canvas id="visualizer-canvas"></canvas>
+        </div>
+
+        <!-- Track Metadata -->
+        <div class="sheet-track-info">
+          <div class="sheet-text-wrap">
+            <h2 id="sheet-title" class="sheet-title">Select a Song</h2>
+            <p id="sheet-subtitle" class="sheet-subtitle">Tollywood Cinema Hits</p>
+            <p id="sheet-singers" class="sheet-singers"></p>
+          </div>
+          <button id="sheet-yt-watch-btn" class="sheet-yt-quick-btn" title="Switch to YouTube Video Mode">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+            <span>Watch Video</span>
+          </button>
+        </div>
+
+        <!-- Scrub Seekbar -->
+        <div class="sheet-seekbar-container">
+          <input type="range" id="sheet-seek-slider" min="0" max="100" value="0" step="0.1">
+          <div class="sheet-time-row">
+            <span id="sheet-current-time">0:00</span>
+            <span id="sheet-total-time">0:00</span>
+          </div>
+        </div>
+
+        <!-- Main Playback Controls -->
+        <div class="sheet-controls-row">
+          <!-- Shuffle -->
+          <button id="sheet-shuffle-btn" class="control-btn" title="Shuffle (S)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+          </button>
+
+          <!-- Previous -->
+          <button id="sheet-prev-btn" class="control-btn" title="Previous (P)">
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2"></line></svg>
+          </button>
+
+          <!-- Play / Pause Circular Button -->
+          <button id="sheet-play-btn" class="sheet-play-btn" title="Play / Pause (Space)">
+            <svg id="sheet-play-icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <svg id="sheet-pause-icon" viewBox="0 0 24 24" fill="currentColor" class="hidden"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+          </button>
+
+          <!-- Next -->
+          <button id="sheet-next-btn" class="control-btn" title="Next (N)">
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2"></line></svg>
+          </button>
+
+          <!-- Repeat -->
+          <button id="sheet-repeat-btn" class="control-btn" title="Repeat (R)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+            <span id="repeat-one-indicator" class="repeat-one-indicator hidden">1</span>
+          </button>
+        </div>
+
+        <!-- Sheet Footer Utility Row -->
+        <div class="sheet-footer-row">
+          <!-- Audio Quality Selector -->
+          <div class="quality-selector-pill">
+            <span class="quality-label">BITRATE</span>
+            <select id="quality-select">
+              <option value="320" selected>320 kbps (HQ)</option>
+              <option value="160">160 kbps (Standard)</option>
+              <option value="96">96 kbps (Data Saver)</option>
+            </select>
+          </div>
+
+          <!-- Sleep Timer Button -->
+          <button id="sleep-timer-btn" class="sheet-tool-btn" title="Sleep Timer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <span id="sleep-timer-label">Timer</span>
+          </button>
+
+          <!-- Queue Drawer Toggle -->
+          <button id="sheet-queue-btn" class="sheet-tool-btn" title="Up Next Queue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>
+            <span>Queue</span>
+          </button>
+
+          <!-- Volume Slider -->
+          <div class="sheet-volume-wrapper">
+            <button id="sheet-mute-btn" class="sheet-mute-btn" title="Mute/Unmute">
+              <svg id="volume-high-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+              <svg id="volume-muted-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="hidden"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+            </button>
+            <input type="range" id="sheet-volume-slider" min="0" max="1" step="0.01" value="0.8">
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ================= UP NEXT QUEUE DRAWER ================= -->
+    <div id="queue-drawer" class="queue-drawer">
+      <div class="drawer-header">
+        <div class="drawer-title-wrap">
+          <h3 class="drawer-title">Up Next</h3>
+          <span id="queue-total-count" class="drawer-subtitle">0 songs</span>
+        </div>
+        <div class="drawer-header-actions">
+          <button id="queue-clear-btn" class="drawer-action-btn">Clear</button>
+          <button id="queue-close-btn" class="drawer-close-btn">&times;</button>
+        </div>
+      </div>
+      <div class="queue-list" id="queue-list">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- ================= SLEEP TIMER MODAL ================= -->
+    <div id="sleep-modal" class="modal-overlay hidden">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3>Set Sleep Timer</h3>
+          <button id="sleep-modal-close" class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>Music will automatically stop playing after:</p>
+          <div class="timer-options">
+            <button class="timer-opt" data-mins="15">15 Minutes</button>
+            <button class="timer-opt" data-mins="30">30 Minutes</button>
+            <button class="timer-opt" data-mins="45">45 Minutes</button>
+            <button class="timer-opt" data-mins="60">1 Hour</button>
+            <button class="timer-opt" data-mins="end">End of Track</button>
+            <button class="timer-opt timer-opt-cancel" data-mins="0">Turn Off Timer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= CREATE / EDIT PLAYLIST MODAL ================= -->
+    <div id="playlist-modal" class="modal-overlay hidden">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3 id="playlist-modal-heading">Create Custom Playlist</h3>
+          <button id="playlist-modal-close" class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <label for="new-playlist-name" class="modal-label">Playlist Name</label>
+          <input type="text" id="new-playlist-name" placeholder="e.g., Chill Melodies, Late Night Drive, Gym Bangers..." class="modal-input" autocomplete="off">
+          
+          <label for="new-playlist-desc" class="modal-label">Description (Optional)</label>
+          <input type="text" id="new-playlist-desc" placeholder="Give your playlist a vibe or mood..." class="modal-input" autocomplete="off">
+          
+          <div class="modal-actions">
+            <button id="cancel-playlist-btn" class="btn btn-secondary">Cancel</button>
+            <button id="save-playlist-btn" class="btn btn-primary">Save Playlist</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= ADD TO PLAYLIST PICKER MODAL ================= -->
+    <div id="add-to-playlist-modal" class="modal-overlay hidden">
+      <div class="modal-box playlist-picker-modal">
+        <div class="modal-header">
+          <h3>Add to Playlist</h3>
+          <button id="add-to-playlist-modal-close" class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <!-- Target Song Preview -->
+          <div class="playlist-picker-target" id="picker-target-song">
+            <img id="picker-target-art" src="" alt="" class="picker-song-art">
+            <div class="picker-song-info">
+              <div id="picker-target-title" class="picker-song-title">Song Title</div>
+              <div id="picker-target-sub" class="picker-song-sub">Movie • Artist</div>
+            </div>
+          </div>
+
+          <!-- Quick Create Playlist Row -->
+          <div class="playlist-picker-create-row">
+            <input type="text" id="picker-quick-name" placeholder="New playlist name..." class="modal-input" autocomplete="off">
+            <button id="picker-quick-create-btn" class="btn btn-primary">Create</button>
+          </div>
+
+          <!-- List of Existing Playlists -->
+          <div class="playlist-picker-list-label">Choose Playlist</div>
+          <div class="playlist-picker-list" id="picker-playlists-list">
+            <!-- Populated dynamically by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= PRIVACY ACCOUNTS & PROFILE MODAL ================= -->
+    <div id="account-modal" class="modal-overlay hidden">
+      <div class="modal-box account-modal-box">
+        <div class="modal-header">
+          <div class="modal-title-with-badge">
+            <h3>👥 Privacy Profiles & Accounts</h3>
+            <span class="privacy-pill">🔒 Private Space</span>
+          </div>
+          <button id="account-modal-close" class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <!-- Active Profile Showcase Card -->
+          <div class="active-profile-card">
+            <div class="active-profile-avatar" id="active-profile-avatar">🎧</div>
+            <div class="active-profile-details">
+              <div class="active-profile-name-row">
+                <h4 id="active-profile-name">My Profile</h4>
+                <span class="profile-status-badge" id="active-profile-pin-status">🔓 Public</span>
+              </div>
+              <p class="active-profile-stats" id="active-profile-stats">0 Likes • 0 Playlists • 0 History</p>
+            </div>
+            <div class="active-profile-actions">
+              <button id="lock-profile-btn" class="btn btn-secondary btn-sm" title="Lock your account before giving device to friends">
+                <span>🔒 Lock Session</span>
+              </button>
+              <button id="manage-pin-btn" class="btn btn-secondary btn-sm" title="Change or set 4-digit PIN">
+                <span>🔑 Privacy PIN</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Switch Accounts List -->
+          <div class="account-section-header">
+            <h4>Switch to a Friend's Profile</h4>
+            <span class="account-count-tag" id="accounts-count-tag">1 Account</span>
+          </div>
+          <div class="profiles-grid" id="profiles-list-grid">
+            <!-- Populated dynamically by JS -->
+          </div>
+
+          <!-- Add Friend Account Toggle / Form -->
+          <div class="add-account-section">
+            <button id="toggle-add-account-btn" class="btn btn-outline-primary btn-block">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>Add Friend / Create New Private Account</span>
+            </button>
+
+            <div id="new-account-form-wrap" class="new-account-form hidden">
+              <div class="form-title">✨ Create a New Friend's Account</div>
+              
+              <label class="modal-label">Friend's Name</label>
+              <input type="text" id="new-account-name" placeholder="e.g., Arjun, Priya, Rahul, Sneha..." class="modal-input" maxlength="24" autocomplete="off">
+              
+              <label class="modal-label">Choose Avatar / Icon</label>
+              <div class="avatar-picker-grid" id="avatar-picker-grid">
+                <button type="button" class="avatar-opt active" data-avatar="🎧">🎧</button>
+                <button type="button" class="avatar-opt" data-avatar="⚡">⚡</button>
+                <button type="button" class="avatar-opt" data-avatar="👑">👑</button>
+                <button type="button" class="avatar-opt" data-avatar="🦁">🦁</button>
+                <button type="button" class="avatar-opt" data-avatar="🌸">🌸</button>
+                <button type="button" class="avatar-opt" data-avatar="🎸">🎸</button>
+                <button type="button" class="avatar-opt" data-avatar="🔥">🔥</button>
+                <button type="button" class="avatar-opt" data-avatar="🚀">🚀</button>
+                <button type="button" class="avatar-opt" data-avatar="💎">💎</button>
+                <button type="button" class="avatar-opt" data-avatar="🕶️">🕶️</button>
+                <button type="button" class="avatar-opt" data-avatar="🌙">🌙</button>
+                <button type="button" class="avatar-opt" data-avatar="🎬">🎬</button>
+              </div>
+
+              <!-- Privacy Lock Toggle -->
+              <div class="privacy-toggle-row">
+                <label class="toggle-label" for="new-account-pin-toggle">
+                  <input type="checkbox" id="new-account-pin-toggle">
+                  <span>🔒 Protect with 4-Digit Privacy PIN (Keep songs private)</span>
+                </label>
+              </div>
+
+              <div id="new-account-pin-field-wrap" class="pin-field-wrap hidden">
+                <label class="modal-label">Enter 4-Digit Privacy PIN</label>
+                <input type="password" id="new-account-pin" placeholder="••••" maxlength="4" inputmode="numeric" class="modal-input pin-input" autocomplete="new-password">
+                <small class="pin-hint">Only you can view your liked songs, custom playlists, and history with this PIN.</small>
+              </div>
+
+              <div class="modal-actions">
+                <button id="cancel-create-account-btn" class="btn btn-secondary">Cancel</button>
+                <button id="submit-create-account-btn" class="btn btn-primary">Create Account</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= PIN UNLOCK PROMPT MODAL ================= -->
+    <div id="pin-prompt-modal" class="modal-overlay hidden">
+      <div class="modal-box pin-modal-box">
+        <div class="modal-header">
+          <h3>🔒 Privacy Account Locked</h3>
+          <button id="pin-prompt-modal-close" class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body pin-modal-body">
+          <div class="pin-target-preview">
+            <div class="pin-target-avatar" id="pin-prompt-avatar">🎧</div>
+            <h4 class="pin-target-name" id="pin-prompt-name">Account Name</h4>
+            <p class="pin-target-desc">Enter your 4-digit PIN to access private playlists & songs</p>
+          </div>
+
+          <!-- PIN Indicators -->
+          <div class="pin-dots-container" id="pin-dots-display">
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+          </div>
+
+          <!-- Hidden actual input for hardware keyboard -->
+          <input type="password" id="pin-hidden-input" maxlength="4" inputmode="numeric" class="pin-hidden-input" autocomplete="off">
+
+          <div id="pin-error-msg" class="pin-error-msg hidden">Incorrect PIN. Try again.</div>
+
+          <!-- Tactile Numeric Keypad -->
+          <div class="numeric-keypad">
+            <button type="button" class="keypad-key" data-digit="1">1</button>
+            <button type="button" class="keypad-key" data-digit="2">2</button>
+            <button type="button" class="keypad-key" data-digit="3">3</button>
+            <button type="button" class="keypad-key" data-digit="4">4</button>
+            <button type="button" class="keypad-key" data-digit="5">5</button>
+            <button type="button" class="keypad-key" data-digit="6">6</button>
+            <button type="button" class="keypad-key" data-digit="7">7</button>
+            <button type="button" class="keypad-key" data-digit="8">8</button>
+            <button type="button" class="keypad-key" data-digit="9">9</button>
+            <button type="button" class="keypad-key keypad-clear" id="keypad-clear-btn">CLR</button>
+            <button type="button" class="keypad-key" data-digit="0">0</button>
+            <button type="button" class="keypad-key keypad-backspace" id="keypad-backspace-btn">⌫</button>
+          </div>
+
+          <div class="modal-actions pin-modal-actions">
+            <button id="cancel-pin-btn" class="btn btn-secondary">Switch Profile</button>
+            <button id="submit-pin-btn" class="btn btn-primary">Unlock Profile</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= MANAGE / CHANGE PIN MODAL ================= -->
+    <div id="manage-pin-modal" class="modal-overlay hidden">
+      <div class="modal-box manage-pin-box">
+        <div class="modal-header">
+          <h3>🔑 Manage Privacy PIN</h3>
+          <button id="manage-pin-modal-close" class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div id="manage-current-pin-group">
+            <label class="modal-label">Current PIN</label>
+            <input type="password" id="manage-current-pin" maxlength="4" inputmode="numeric" placeholder="••••" class="modal-input pin-input">
+          </div>
+
+          <label class="modal-label">New 4-Digit PIN (or leave blank to remove PIN)</label>
+          <input type="password" id="manage-new-pin" maxlength="4" inputmode="numeric" placeholder="••••" class="modal-input pin-input">
+
+          <div class="modal-actions">
+            <button id="cancel-manage-pin-btn" class="btn btn-secondary">Cancel</button>
+            <button id="save-manage-pin-btn" class="btn btn-primary">Update PIN</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden Native Audio Element -->
+    <audio id="native-audio" crossorigin="anonymous" preload="auto"></audio>
+
+    <!-- Offscreen Canvas for Dynamic Album Art Color Extraction -->
+    <canvas id="color-extractor-canvas" width="64" height="64" style="display:none;"></canvas>
+
+  </div>
+
+  <!-- YouTube IFrame API Script -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <!-- Application Script -->
+  <script src="app.js?v=2.7"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "Swaram — Retro Music Player",
+  "short_name": "Swaram",
+  "description": "High-Fidelity Pan-India Music Streaming & Offline Player",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#060709",
+  "theme_color": "#060709",
+  "icons": [
+    {
+      "src": "https://c.saavncdn.com/366/Pushpa-2-The-Rule-Telugu-Telugu-2024-20241205211012-500x500.jpg",
+      "sizes": "500x500",
+      "type": "image/jpeg"
+    }
+  ]
+}

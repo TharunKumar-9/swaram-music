@@ -1,0 +1,23 @@
+{
+  "name": "swaram-music-player",
+  "version": "1.0.0",
+  "description": "Swaram - Pan-India & Tollywood Retro Music Player with high-fidelity streaming and private friend accounts",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "music-player",
+    "tollywood",
+    "bollywood",
+    "kollywood",
+    "sandalwood",
+    "mollywood",
+    "streaming"
+  ],
+  "author": "Antigravity",
+  "license": "MIT"
+}
