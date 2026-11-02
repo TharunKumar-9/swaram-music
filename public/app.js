@@ -81,6 +81,44 @@ const sheetSourceBadge = document.getElementById('sheet-source-badge');
 const sheetYtWatchBtn = document.getElementById('sheet-yt-watch-btn');
 const lyricsContainer = document.getElementById('lyrics-container');
 
+// Spotify Persistent Dock Player elements
+const dockPlayerBar = document.getElementById('spotify-player-bar');
+const dockArt = document.getElementById('dock-art');
+const dockTitle = document.getElementById('dock-title');
+const dockArtist = document.getElementById('dock-artist');
+const dockLikeBtn = document.getElementById('dock-like-btn');
+const dockYtBtn = document.getElementById('dock-yt-btn');
+const dockPlayBtn = document.getElementById('dock-play-btn');
+const dockPlayIcon = document.getElementById('dock-play-icon');
+const dockPauseIcon = document.getElementById('dock-pause-icon');
+const dockPrevBtn = document.getElementById('dock-prev-btn');
+const dockNextBtn = document.getElementById('dock-next-btn');
+const dockShuffleBtn = document.getElementById('dock-shuffle-btn');
+const dockRepeatBtn = document.getElementById('dock-repeat-btn');
+const dockRepeatIndicator = document.getElementById('dock-repeat-indicator');
+const dockSeekSlider = document.getElementById('dock-seek-slider');
+const dockCurrentTime = document.getElementById('dock-current-time');
+const dockTotalTime = document.getElementById('dock-total-time');
+const dockVolumeSlider = document.getElementById('dock-volume-slider');
+const dockMuteBtn = document.getElementById('dock-mute-btn');
+const dockVolumeHigh = document.getElementById('dock-volume-high');
+const dockVolumeMuted = document.getElementById('dock-volume-muted');
+const dockLyricsBtn = document.getElementById('dock-lyrics-btn');
+const dockQueueBtn = document.getElementById('dock-queue-btn');
+const dockExpandBtn = document.getElementById('dock-expand-btn');
+const dockExpandTrigger = document.getElementById('dock-expand-trigger');
+
+// Spotify Sidebar & Navigation elements
+const sidebarNewPlaylistBtn = document.getElementById('sidebar-new-playlist-btn');
+const sideLikedCount = document.getElementById('side-liked-count');
+const sideDownloadsCount = document.getElementById('side-downloads-count');
+const sideHistoryCount = document.getElementById('side-history-count');
+const sidebarCustomPlaylistsContainer = document.getElementById('sidebar-custom-playlists-container');
+const navBackBtn = document.getElementById('nav-back-btn');
+const navForwardBtn = document.getElementById('nav-forward-btn');
+const spotifyGreetingTitle = document.getElementById('spotify-greeting-title');
+const quickPicksGrid = document.getElementById('quick-picks-grid');
+
 // Tabs and Views
 const navTabs = document.querySelectorAll('.nav-tab');
 const tabViews = document.querySelectorAll('.tab-view');
@@ -1376,6 +1414,7 @@ function renderCustomPlaylists() {
 
     grid.appendChild(card);
   });
+  updateSidebarLibraryUI();
 }
 
 function openPlaylistDetail(playlistId) {
@@ -1932,10 +1971,12 @@ function updatePlayPauseUI(playing) {
   miniPauseIcon.classList.toggle('hidden', !playing);
   sheetPlayIcon.classList.toggle('hidden', playing);
   sheetPauseIcon.classList.toggle('hidden', !playing);
+  if (dockPlayIcon) dockPlayIcon.classList.toggle('hidden', playing);
+  if (dockPauseIcon) dockPauseIcon.classList.toggle('hidden', !playing);
 
   // Animate mini progress bar
   if (!playing) {
-    document.title = state.currentSong ? `${state.currentSong.title} — Swaram` : 'Swaram — Tollywood Retro Music';
+    document.title = state.currentSong ? `${state.currentSong.title} — Swaram` : 'Swaram — Spotify Music';
   } else {
     document.title = `▶ ${state.currentSong?.title} — Swaram`;
   }
@@ -1949,6 +1990,13 @@ function updateNowPlayingDisplay(song) {
   miniArt.src = img;
   miniTitle.textContent = song.title;
   miniArtist.textContent = `${song.movie} • ${song.singers || song.music}`;
+
+  if (dockArt) dockArt.src = img;
+  if (dockTitle) dockTitle.textContent = song.title;
+  if (dockArtist) dockArtist.textContent = `${song.movie} • ${song.singers || song.music}`;
+  if (dockTotalTime) dockTotalTime.textContent = song.durationFormatted || '3:30';
+  if (dockCurrentTime) dockCurrentTime.textContent = '0:00';
+  if (dockSeekSlider) dockSeekSlider.value = 0;
 
   sheetArt.src = img;
   sheetVinylSleeveArt.src = img;
@@ -2011,9 +2059,12 @@ audio.addEventListener('timeupdate', () => {
   const pct = (current / total) * 100;
 
   sheetSeekSlider.value = pct;
+  if (dockSeekSlider) dockSeekSlider.value = pct;
   miniProgressFill.style.width = `${pct}%`;
   sheetCurrentTime.textContent = formatTime(current);
+  if (dockCurrentTime) dockCurrentTime.textContent = formatTime(current);
   sheetTotalTime.textContent = formatTime(total);
+  if (dockTotalTime) dockTotalTime.textContent = formatTime(total);
 });
 
 audio.addEventListener('ended', () => {
@@ -2029,6 +2080,7 @@ sheetSeekSlider.addEventListener('input', () => {
   if (!audio.duration) return;
   const pct = parseFloat(sheetSeekSlider.value);
   audio.currentTime = (pct / 100) * audio.duration;
+  if (dockSeekSlider) dockSeekSlider.value = pct;
 });
 
 // Volume slider
@@ -2048,6 +2100,10 @@ sheetMuteBtn.addEventListener('click', () => {
 function updateVolumeUI() {
   volumeHighIcon.classList.toggle('hidden', state.isMuted);
   volumeMutedIcon.classList.toggle('hidden', !state.isMuted);
+  if (dockVolumeHigh) dockVolumeHigh.classList.toggle('hidden', state.isMuted);
+  if (dockVolumeMuted) dockVolumeMuted.classList.toggle('hidden', !state.isMuted);
+  if (dockVolumeSlider) dockVolumeSlider.value = state.isMuted ? 0 : state.volume;
+  if (sheetVolumeSlider) sheetVolumeSlider.value = state.isMuted ? 0 : state.volume;
 }
 
 // Shuffle & Repeat
@@ -2275,18 +2331,224 @@ function toggleLike(song) {
 
 function updateLikeBtnState(songId) {
   const liked = isSongLiked(songId);
-  miniLikeBtn.classList.toggle('liked', liked);
-  sheetLikeBtn.classList.toggle('liked', liked);
-  miniLikeBtn.querySelector('svg').style.fill = liked ? 'var(--accent-color)' : 'none';
-  sheetLikeBtn.querySelector('svg').style.fill = liked ? 'var(--accent-color)' : 'none';
+  if (miniLikeBtn) {
+    miniLikeBtn.classList.toggle('liked', liked);
+    const svg = miniLikeBtn.querySelector('svg');
+    if (svg) svg.style.fill = liked ? 'var(--accent-color)' : 'none';
+  }
+  if (sheetLikeBtn) {
+    sheetLikeBtn.classList.toggle('liked', liked);
+    const svg = sheetLikeBtn.querySelector('svg');
+    if (svg) svg.style.fill = liked ? 'var(--accent-color)' : 'none';
+  }
+  if (dockLikeBtn) {
+    dockLikeBtn.classList.toggle('active', liked);
+    const svg = dockLikeBtn.querySelector('svg');
+    if (svg) svg.style.fill = liked ? '#1db954' : 'none';
+  }
+  updateSidebarLibraryUI();
 }
 
-miniLikeBtn.addEventListener('click', () => toggleLike(state.currentSong));
-sheetLikeBtn.addEventListener('click', () => toggleLike(state.currentSong));
+miniLikeBtn?.addEventListener('click', () => toggleLike(state.currentSong));
+sheetLikeBtn?.addEventListener('click', () => toggleLike(state.currentSong));
+dockLikeBtn?.addEventListener('click', () => toggleLike(state.currentSong));
+
+// --- Spotify Bottom Dock Player Event Listeners ---
+dockPlayBtn?.addEventListener('click', togglePlayPause);
+dockPrevBtn?.addEventListener('click', playPrev);
+dockNextBtn?.addEventListener('click', playNext);
+
+dockShuffleBtn?.addEventListener('click', () => {
+  sheetShuffleBtn.click();
+  dockShuffleBtn.classList.toggle('active', state.isShuffled);
+});
+
+dockRepeatBtn?.addEventListener('click', () => {
+  sheetRepeatBtn.click();
+  dockRepeatBtn.classList.toggle('active', state.repeatMode !== 'off');
+  dockRepeatIndicator?.classList.toggle('hidden', state.repeatMode !== 'one');
+});
+
+dockSeekSlider?.addEventListener('input', () => {
+  if (!audio.duration) return;
+  const pct = parseFloat(dockSeekSlider.value);
+  audio.currentTime = (pct / 100) * audio.duration;
+  sheetSeekSlider.value = pct;
+});
+
+dockVolumeSlider?.addEventListener('input', () => {
+  state.volume = parseFloat(dockVolumeSlider.value);
+  audio.volume = state.volume;
+  state.isMuted = state.volume === 0;
+  updateVolumeUI();
+});
+
+dockMuteBtn?.addEventListener('click', () => {
+  state.isMuted = !state.isMuted;
+  audio.volume = state.isMuted ? 0 : state.volume;
+  updateVolumeUI();
+});
+
+dockYtBtn?.addEventListener('click', () => {
+  if (state.currentSong) playYouTubeForSong(state.currentSong);
+});
+
+dockLyricsBtn?.addEventListener('click', () => {
+  switchCenterMode('lyrics');
+  openNowPlayingSheet();
+});
+
+dockQueueBtn?.addEventListener('click', () => queueDrawer.classList.toggle('active'));
+dockExpandBtn?.addEventListener('click', openNowPlayingSheet);
+dockExpandTrigger?.addEventListener('click', openNowPlayingSheet);
+sidebarNewPlaylistBtn?.addEventListener('click', openCreatePlaylistModal);
+
+// Navigation History Arrows (<, >)
+const tabHistory = ['home'];
+let tabHistoryIndex = 0;
+let isHistoryNav = false;
+
+function updateNavArrowsState() {
+  if (navBackBtn) navBackBtn.style.opacity = tabHistoryIndex > 0 ? '1' : '0.4';
+  if (navForwardBtn) navForwardBtn.style.opacity = tabHistoryIndex < tabHistory.length - 1 ? '1' : '0.4';
+}
+
+navBackBtn?.addEventListener('click', () => {
+  if (tabHistoryIndex > 0) {
+    tabHistoryIndex--;
+    isHistoryNav = true;
+    switchTab(tabHistory[tabHistoryIndex]);
+    isHistoryNav = false;
+  }
+});
+
+navForwardBtn?.addEventListener('click', () => {
+  if (tabHistoryIndex < tabHistory.length - 1) {
+    tabHistoryIndex++;
+    isHistoryNav = true;
+    switchTab(tabHistory[tabHistoryIndex]);
+    isHistoryNav = false;
+  }
+});
+
+// Sidebar Library Counter & Custom Playlists Sync
+function updateSidebarLibraryUI() {
+  if (sideLikedCount) {
+    const l = state.likedSongs.length;
+    sideLikedCount.textContent = `Playlist • ${l} song${l === 1 ? '' : 's'}`;
+  }
+  if (sideDownloadsCount) {
+    const d = state.downloadedSongIds ? state.downloadedSongIds.size : 0;
+    sideDownloadsCount.textContent = `Offline • ${d} song${d === 1 ? '' : 's'}`;
+  }
+  if (sideHistoryCount) {
+    const h = state.history ? state.history.length : 0;
+    sideHistoryCount.textContent = `History • ${h} song${h === 1 ? '' : 's'}`;
+  }
+
+  if (sidebarCustomPlaylistsContainer) {
+    sidebarCustomPlaylistsContainer.innerHTML = '';
+    (state.customPlaylists || []).forEach(pl => {
+      const item = document.createElement('div');
+      item.className = 'sidebar-custom-playlist-item';
+      item.innerHTML = `
+        <div class="custom-pl-art">📁</div>
+        <div class="lib-tile-info">
+          <span class="lib-tile-title">${pl.name}</span>
+          <span class="lib-tile-sub">Playlist • ${pl.songs.length} song${pl.songs.length === 1 ? '' : 's'}</span>
+        </div>
+      `;
+      item.addEventListener('click', () => openPlaylistDetail(pl.id));
+      sidebarCustomPlaylistsContainer.appendChild(item);
+    });
+  }
+}
+
+// Spotify Dynamic Greeting & Quick-Picks 6-Grid
+function renderSpotifyGreetingAndQuickPicks() {
+  const greetingEl = document.getElementById('spotify-greeting-title');
+  const gridEl = document.getElementById('quick-picks-grid');
+  if (!greetingEl || !gridEl) return;
+
+  const hr = new Date().getHours();
+  let greet = 'Good evening';
+  if (hr >= 4 && hr < 12) greet = 'Good morning';
+  else if (hr >= 12 && hr < 17) greet = 'Good afternoon';
+
+  const user = (typeof AccountManager !== 'undefined' && AccountManager.activeAccount?.name) ? AccountManager.activeAccount.name : null;
+  greetingEl.textContent = user ? `${greet}, ${user} 👋` : `${greet} 👋`;
+
+  const quickItems = [
+    {
+      title: 'Liked Songs',
+      isLiked: true,
+      art: null,
+      action: () => switchTab('playlists')
+    },
+    {
+      title: '🦁 Tollywood Chartbusters',
+      art: 'https://c.saavncdn.com/366/Pushpa-2-The-Rule-Telugu-Telugu-2024-20241205211012-500x500.jpg',
+      action: () => openCategoryDetail('telugu_hits')
+    },
+    {
+      title: '👑 Bollywood Blockbusters',
+      art: 'https://c.saavncdn.com/373/Stree-2-Hindi-2024-20240828083834-500x500.jpg',
+      action: () => openCategoryDetail('bollywood_hits')
+    },
+    {
+      title: '⚡ Kollywood Thunder',
+      art: 'https://c.saavncdn.com/415/Leo-Original-Motion-Picture-Soundtrack-English-2023-20231019170311-500x500.jpg',
+      action: () => openCategoryDetail('kollywood_hits')
+    },
+    {
+      title: '💖 Soulful Melodies',
+      art: 'https://c.saavncdn.com/353/Prema-Kavithalu-2026-Valentines-Day-Special-Telugu-2026-20260212201005-500x500.jpg',
+      action: () => openCategoryDetail('melody')
+    },
+    {
+      title: '🕒 Recently Played',
+      art: 'https://c.saavncdn.com/979/Devara-Part-1-Telugu-Telugu-2024-20240927063116-500x500.jpg',
+      action: () => switchTab('history')
+    }
+  ];
+
+  gridEl.innerHTML = '';
+  quickItems.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'quick-pick-card';
+    if (item.isLiked) {
+      card.innerHTML = `
+        <div class="quick-pick-tile-liked">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        </div>
+        <span class="quick-pick-title">${item.title}</span>
+        <button class="quick-pick-play-btn" title="Play">
+          <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        </button>
+      `;
+    } else {
+      card.innerHTML = `
+        <img src="${item.art}" alt="${item.title}" class="quick-pick-art" loading="lazy">
+        <span class="quick-pick-title">${item.title}</span>
+        <button class="quick-pick-play-btn" title="Play">
+          <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        </button>
+      `;
+    }
+
+    card.addEventListener('click', item.action);
+    card.querySelector('.quick-pick-play-btn')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      item.action();
+    });
+
+    gridEl.appendChild(card);
+  });
+}
 
 function renderLikedCount() {
   const countEl = document.getElementById('liked-count-text');
-  if (countEl) countEl.textContent = `${state.likedSongs.length} favorite Telugu tracks`;
+  if (countEl) countEl.textContent = `${state.likedSongs.length} favorite tracks`;
 }
 
 document.getElementById('play-liked-btn')?.addEventListener('click', () => {
@@ -2297,19 +2559,32 @@ document.getElementById('play-liked-btn')?.addEventListener('click', () => {
   }
 });
 
-// --- Tab Navigation ---
-navTabs.forEach(tab => {
-  tab.addEventListener('click', () => {
-    const target = tab.getAttribute('data-tab');
+// Delegated Tab Navigation Click Listener (Catches sidebar, topbar, mobile nav tabs)
+document.addEventListener('click', (e) => {
+  const tabBtn = e.target.closest('.nav-tab');
+  if (tabBtn && tabBtn.hasAttribute('data-tab')) {
+    const target = tabBtn.getAttribute('data-tab');
     switchTab(target);
-  });
+  }
 });
 
 function switchTab(tabId) {
   state.activeTab = tabId;
-  navTabs.forEach(t => t.classList.toggle('active', t.getAttribute('data-tab') === tabId));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.getAttribute('data-tab') === tabId));
   tabViews.forEach(v => v.classList.toggle('active', v.id === `view-${tabId}`));
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  const mainEl = document.querySelector('.spotify-main');
+  if (mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+
+  if (!isHistoryNav) {
+    if (tabHistoryIndex < tabHistory.length - 1) {
+      tabHistory.splice(tabHistoryIndex + 1);
+    }
+    tabHistory.push(tabId);
+    tabHistoryIndex = tabHistory.length - 1;
+  }
+  updateNavArrowsState();
+
   if (tabId === 'downloads') {
     renderDownloadsView();
   } else if (tabId === 'playlists') {
@@ -2318,15 +2593,16 @@ function switchTab(tabId) {
   } else if (tabId === 'history') {
     renderHistoryView();
   }
+  updateSidebarLibraryUI();
 }
 
 // Brand click -> home
-document.querySelector('.brand').addEventListener('click', () => switchTab('home'));
+document.querySelectorAll('.brand').forEach(b => b.addEventListener('click', () => switchTab('home')));
 
 // --- Theme Switcher ---
 const themeBtn = document.getElementById('theme-btn');
 const themeDropdown = document.getElementById('theme-dropdown');
-themeBtn.addEventListener('click', () => themeDropdown.classList.toggle('hidden'));
+themeBtn?.addEventListener('click', () => themeDropdown.classList.toggle('hidden'));
 
 function applyTheme(theme) {
   if (!theme) return;
@@ -2949,6 +3225,7 @@ async function loadArtists() {
     card.addEventListener('click', () => openArtistDetail(artist.id, avatarUrl));
     grid.appendChild(card);
   });
+  updateSidebarLibraryUI();
 }
 
 // 5. Blockbuster Albums Grid (Bollywood, Kollywood, Sandalwood, Tollywood, Mollywood)
@@ -2999,6 +3276,7 @@ async function loadAlbums() {
     card.addEventListener('click', () => openSearchDetail(album.query, album.title, album.img));
     grid.appendChild(card);
   });
+  updateSidebarLibraryUI();
 }
 
 // 6. Open Category or Search Detail View
@@ -3513,6 +3791,11 @@ function initApp() {
   updateHistoryUI();
   renderHistoryCarousel();
   initHistoryEvents();
+
+  // Spotify Signature UI Initializers
+  renderSpotifyGreetingAndQuickPicks();
+  updateSidebarLibraryUI();
+  updateNavArrowsState();
 
   // Async storage & data catalog loading
   OfflineDB.init().then(() => {

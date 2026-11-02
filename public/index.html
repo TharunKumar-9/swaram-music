@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Swaram — Retro Music Player (Tollywood Edition)</title>
+  <title>Swaram — Spotify Edition (Pan-India Music)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Cinzel:wght@700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=2.7">
+  <link rel="stylesheet" href="style.css?v=3.0">
   <link rel="manifest" href="/manifest.json">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ff3366'><path d='M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z'/></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231db954'><path d='M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z'/></svg>">
 </head>
-<body class="theme-amoled">
+<body class="theme-spotify">
 
   <!-- Dynamic Ambient Glow Backdrop (Driven by Album Art Color Extractor) -->
   <div id="ambient-glow" class="ambient-glow"></div>
@@ -28,10 +28,13 @@
       <button id="offline-view-btn" class="offline-banner-btn">Go to Offline Downloads</button>
     </div>
 
-    <!-- Top Navigation Header -->
-    <header class="app-header">
-      <div class="header-left">
-        <div class="brand">
+    <!-- Spotify Main Application Shell (Sidebar + Main Area) -->
+    <div class="spotify-shell">
+
+      <!-- ================= SPOTIFY SIDEBAR (DESKTOP & TABLET) ================= -->
+      <aside class="spotify-sidebar" id="spotify-sidebar">
+        <!-- Brand / Logo -->
+        <div class="sidebar-brand brand" title="Swaram — Pan-India Music">
           <div class="brand-icon">
             <svg viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
@@ -39,147 +42,241 @@
           </div>
           <div class="brand-text">
             <span class="brand-name">SWARAM</span>
-            <span class="brand-tag">PAN-INDIA MUSIC</span>
+            <span class="brand-tag">MUSIC PLAYER</span>
           </div>
         </div>
 
-        <!-- Search Bar -->
-        <div class="search-container">
-          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input type="text" id="global-search" placeholder="Search any song: Bollywood, Tollywood, Tamil, Kannada, Malayalam, Arijit, Anirudh..." autocomplete="off">
-          <button id="search-clear-btn" class="search-clear hidden">&times;</button>
+        <!-- Main Navigation Section -->
+        <div class="sidebar-nav-card">
+          <nav class="sidebar-nav">
+            <button class="nav-tab active" data-tab="home" id="side-nav-home">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+              <span>Home</span>
+            </button>
+            <button class="nav-tab" data-tab="search-results" id="side-nav-search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <span>Search</span>
+            </button>
+            <button class="nav-tab" data-tab="songs" id="side-nav-songs">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+              <span>Top Songs</span>
+            </button>
+            <button class="nav-tab" data-tab="artists" id="side-nav-artists">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <span>Artists & Stars</span>
+            </button>
+            <button class="nav-tab nav-tab-youtube" data-tab="youtube" id="side-nav-youtube">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+              <span>YouTube Video</span>
+            </button>
+          </nav>
         </div>
-      </div>
 
-      <!-- Navigation Tabs (Retro Music Style) -->
-      <nav class="nav-tabs">
-        <button class="nav-tab active" data-tab="home">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-          <span>Home</span>
-        </button>
-        <button class="nav-tab" data-tab="songs">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
-          <span>Songs</span>
-        </button>
-        <button class="nav-tab" data-tab="albums">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg>
-          <span>Albums</span>
-        </button>
-        <button class="nav-tab" data-tab="artists">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-          <span>Heroes & Stars</span>
-        </button>
-        <button class="nav-tab" data-tab="playlists">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-          <span>Library</span>
-        </button>
-        <button class="nav-tab nav-tab-history" data-tab="history">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-          <span>History</span>
-          <span class="nav-badge" id="nav-history-count">0</span>
-        </button>
-        <button class="nav-tab nav-tab-downloads" data-tab="downloads">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          <span>Downloads</span>
-          <span class="nav-badge" id="nav-downloads-count">0</span>
-        </button>
-        <button class="nav-tab nav-tab-youtube" data-tab="youtube">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-          <span>YouTube Live</span>
-        </button>
-      </nav>
+        <!-- Your Library Section (Spotify Signature) -->
+        <div class="sidebar-library-card">
+          <div class="sidebar-library-header">
+            <button class="nav-tab library-header-btn" data-tab="playlists" id="side-nav-library">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+              <span>Your Library</span>
+            </button>
+            <button id="sidebar-new-playlist-btn" class="sidebar-add-btn" title="Create Playlist">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </button>
+          </div>
 
-      <!-- Header Right Controls -->
-      <div class="header-right">
-        <!-- User Profile & Privacy Account Button -->
-        <button id="account-btn" class="account-btn" title="Privacy Profile & Accounts">
-          <span id="account-avatar" class="account-avatar">🎧</span>
-          <span id="account-name" class="account-name">My Profile</span>
-          <span id="account-lock-badge" class="account-lock-badge hidden" title="Protected with Privacy PIN">🔒</span>
-        </button>
+          <!-- Quick Library Pills -->
+          <div class="sidebar-lib-pills">
+            <button class="nav-tab lib-pill" data-tab="playlists">Playlists</button>
+            <button class="nav-tab lib-pill" data-tab="downloads">Downloads</button>
+            <button class="nav-tab lib-pill" data-tab="history">History</button>
+          </div>
 
-        <!-- Theme Dropdown -->
-        <div class="theme-selector-container">
-          <button id="theme-btn" class="icon-btn" title="Switch Theme">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-          </button>
-          <div id="theme-dropdown" class="dropdown-menu hidden">
-            <div class="dropdown-item active" data-theme="amoled">🖤 Velvet AMOLED</div>
-            <div class="dropdown-item" data-theme="material-dark">🌌 Material Dark</div>
-            <div class="dropdown-item" data-theme="spotify">🟢 Spotify Emerald</div>
-            <div class="dropdown-item" data-theme="gaana">🔴 Gaana Crimson</div>
-            <div class="dropdown-item" data-theme="gold">👑 Tollywood Gold</div>
+          <!-- Library Items List -->
+          <div class="sidebar-lib-items-scroll" id="sidebar-library-list">
+            <!-- 1. Liked Songs (Spotify Heart Tile) -->
+            <div class="sidebar-lib-item nav-tab" data-tab="playlists" id="side-item-liked">
+              <div class="lib-tile-art tile-liked">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+              </div>
+              <div class="lib-tile-info">
+                <span class="lib-tile-title">Liked Songs</span>
+                <span class="lib-tile-sub" id="side-liked-count">Playlist • 0 songs</span>
+              </div>
+            </div>
+
+            <!-- 2. Downloads -->
+            <div class="sidebar-lib-item nav-tab" data-tab="downloads" id="side-item-downloads">
+              <div class="lib-tile-art tile-downloads">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              </div>
+              <div class="lib-tile-info">
+                <span class="lib-tile-title">Offline Downloads</span>
+                <span class="lib-tile-sub" id="side-downloads-count">Offline • 0 songs</span>
+              </div>
+            </div>
+
+            <!-- 3. Listening History -->
+            <div class="sidebar-lib-item nav-tab" data-tab="history" id="side-item-history">
+              <div class="lib-tile-art tile-history">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              </div>
+              <div class="lib-tile-info">
+                <span class="lib-tile-title">Recently Played</span>
+                <span class="lib-tile-sub" id="side-history-count">History • 0 songs</span>
+              </div>
+            </div>
+
+            <!-- Dynamic Custom Playlists Container -->
+            <div id="sidebar-custom-playlists-container" class="sidebar-custom-playlists-wrap"></div>
           </div>
         </div>
+      </aside>
 
-        <!-- Quality Indicator Pill -->
-        <div id="quality-badge" class="quality-badge" title="Streaming Bitrate">HQ 320k</div>
+      <!-- ================= SPOTIFY MAIN WORKSPACE ================= -->
+      <div class="spotify-main">
 
-        <!-- Up Next Queue Toggle -->
-        <button id="header-queue-btn" class="icon-btn" title="Up Next Queue">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>
-          <span id="queue-badge-count" class="queue-badge-count">0</span>
-        </button>
-      </div>
-    </header>
-
-    <!-- Main Viewport Area -->
-    <main class="main-viewport">
-
-      <!-- ================= TAB 1: HOME ================= -->
-      <section id="view-home" class="tab-view active">
-        <!-- Hero Spotlight Banner -->
-        <div class="hero-banner">
-          <div class="hero-overlay"></div>
-          <div class="hero-content">
-            <span class="hero-tag">🔥 FEATURED BLOCKBUSTER</span>
-            <h1 class="hero-title" id="hero-title">Pushpa 2: The Rule</h1>
-            <p class="hero-subtitle" id="hero-subtitle">Allu Arjun, Rashmika Mandanna • Devi Sri Prasad (DSP)</p>
-            <div class="hero-actions">
-              <button id="hero-play-btn" class="btn btn-primary">
-                <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                <span>Play Album</span>
+        <!-- Top Navigation App Bar -->
+        <header class="app-header spotify-topbar">
+          <div class="header-left">
+            <!-- Navigation History Arrows (Desktop) -->
+            <div class="nav-history-arrows">
+              <button id="nav-back-btn" class="nav-arrow-btn" title="Go Back">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
               </button>
-              <button id="hero-queue-btn" class="btn btn-secondary">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
-                <span>Add to Queue</span>
-              </button>
-              <button id="hero-yt-btn" class="btn btn-youtube">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-                <span>Watch on YouTube</span>
+              <button id="nav-forward-btn" class="nav-arrow-btn" title="Go Forward">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
               </button>
             </div>
+
+            <!-- Mobile Brand (Shown when sidebar is hidden on small screens) -->
+            <div class="brand mobile-brand-logo">
+              <div class="brand-icon">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                </svg>
+              </div>
+              <div class="brand-text">
+                <span class="brand-name">SWARAM</span>
+              </div>
+            </div>
+
+            <!-- Search Bar (Spotify Standard) -->
+            <div class="search-container">
+              <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input type="text" id="global-search" placeholder="What do you want to play? (Songs, movies, singers...)" autocomplete="off">
+              <button id="search-clear-btn" class="search-clear hidden">&times;</button>
+            </div>
           </div>
-          <div class="hero-art-container">
-            <img id="hero-art" src="https://c.saavncdn.com/366/Pushpa-2-The-Rule-Telugu-Telugu-2024-20241205211012-500x500.jpg" alt="Featured Album Art" class="hero-art">
+
+          <!-- Header Right Controls -->
+          <div class="header-right">
+            <!-- Quality Indicator Pill -->
+            <div id="quality-badge" class="quality-badge" title="Streaming Bitrate">HQ 320k</div>
+
+            <!-- Up Next Queue Toggle -->
+            <button id="header-queue-btn" class="icon-btn" title="Up Next Queue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>
+              <span id="queue-badge-count" class="queue-badge-count">0</span>
+            </button>
+
+            <!-- Theme Dropdown -->
+            <div class="theme-selector-container">
+              <button id="theme-btn" class="icon-btn" title="Switch Theme">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+              </button>
+              <div id="theme-dropdown" class="dropdown-menu hidden">
+                <div class="dropdown-item active" data-theme="spotify">🟢 Spotify Emerald</div>
+                <div class="dropdown-item" data-theme="amoled">🖤 Velvet AMOLED</div>
+                <div class="dropdown-item" data-theme="material-dark">🌌 Material Dark</div>
+                <div class="dropdown-item" data-theme="gaana">🔴 Gaana Crimson</div>
+                <div class="dropdown-item" data-theme="gold">👑 Tollywood Gold</div>
+              </div>
+            </div>
+
+            <!-- User Profile & Privacy Account Button -->
+            <button id="account-btn" class="account-btn" title="Privacy Profile & Accounts">
+              <span id="account-avatar" class="account-avatar">🎧</span>
+              <span id="account-name" class="account-name">Profile</span>
+              <span id="account-lock-badge" class="account-lock-badge hidden" title="Protected with Privacy PIN">🔒</span>
+            </button>
+          </div>
+        </header>
+
+        <!-- Main Viewport Area -->
+        <main class="main-viewport">
+
+          <!-- ================= TAB 1: HOME ================= -->
+          <section id="view-home" class="tab-view active">
+
+            <!-- Spotify Dynamic Greeting & Quick-Picks 6-Grid -->
+            <div class="spotify-greeting-section">
+              <h1 class="spotify-greeting-title" id="spotify-greeting-title">Good evening 👋</h1>
+              <div class="quick-picks-grid" id="quick-picks-grid">
+                <!-- Populated dynamically by JS with Spotify quick-play items -->
+              </div>
+            </div>
+
+            <!-- Sleek Single-Line Sticky Filter Pills -->
+            <div class="spotify-sticky-filter-bar">
+              <div class="category-chips-bar" id="industry-chips">
+                <!-- Populated by JS: All, Telugu, Hindi, Tamil, Kannada, Malayalam, Punjabi -->
+              </div>
+            </div>
+
+            <!-- Hero Spotlight Banner (Sleek Featured Blockbuster) -->
+            <div class="hero-banner">
+              <div class="hero-overlay"></div>
+              <div class="hero-content">
+                <span class="hero-tag">🔥 FEATURED BLOCKBUSTER</span>
+                <h1 class="hero-title" id="hero-title">Pushpa 2: The Rule</h1>
+                <p class="hero-subtitle" id="hero-subtitle">Allu Arjun, Rashmika Mandanna • Devi Sri Prasad (DSP)</p>
+                <div class="hero-actions">
+                  <button id="hero-play-btn" class="btn btn-primary">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    <span>Play Album</span>
+                  </button>
+                  <button id="hero-queue-btn" class="btn btn-secondary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
+                    <span>Add to Queue</span>
+                  </button>
+                  <button id="hero-yt-btn" class="btn btn-youtube">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                    <span>Watch on YouTube</span>
+                  </button>
+                </div>
+              </div>
+              <div class="hero-art-container">
+                <img id="hero-art" src="https://c.saavncdn.com/366/Pushpa-2-The-Rule-Telugu-Telugu-2024-20241205211012-500x500.jpg" alt="Featured Album Art" class="hero-art">
+              </div>
+            </div>
+
+        <!-- Section: Vibe & Mood Explorer (Spotify Shelf) -->
+        <div class="section-container">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">🎶 Moods & Vibes</h2>
+              <p class="section-subtitle">Pick an emotion to discover hand-curated tracks</p>
+            </div>
+          </div>
+          <div class="category-chips-bar" id="mood-chips">
+            <!-- Populated by JS: Melody, Energetic, Anger, Gym, Motivation, Love, Breakup -->
           </div>
         </div>
 
-        <!-- Cinema & Industry Filter Bar -->
-        <div class="category-block-header">
-          <span class="category-block-label">🎬 SELECT CINEMA / INDUSTRY (PAN-INDIA)</span>
-        </div>
-        <div class="category-chips-bar" id="industry-chips">
-          <!-- Populated by JS: All India, Tollywood, Bollywood, Kollywood, Sandalwood, Mollywood, Punjabi -->
-        </div>
-
-        <!-- Song Types & Moods Pills Bar -->
-        <div class="category-block-header">
-          <span class="category-block-label">🎶 CHOOSE YOUR VIBE / SONG TYPE</span>
-        </div>
-        <div class="category-chips-bar" id="mood-chips">
-          <!-- Populated by JS: Melody, Energetic, Anger, Gym, Motivation, Love, Breakup -->
-        </div>
-
-        <!-- Singer & Composer Pills Bar -->
-        <div class="category-block-header">
-          <span class="category-block-label">🎤 TOP SINGERS & MUSIC DIRECTORS</span>
-        </div>
-        <div class="category-chips-bar" id="singer-chips">
-          <!-- Populated by JS: Arijit, Anirudh, Thaman, Sai Abhyankkar, Pritam, Rahman, Diljit, etc. -->
+        <!-- Section: Top Singers & Composers (Spotify Shelf) -->
+        <div class="section-container">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">🎤 Hit Music Directors & Singers</h2>
+              <p class="section-subtitle">Arijit Singh, Anirudh, Thaman, Devi Sri Prasad, AR Rahman & more</p>
+            </div>
+          </div>
+          <div class="category-chips-bar" id="singer-chips">
+            <!-- Populated by JS: Arijit, Anirudh, Thaman, Sai Abhyankkar, Pritam, Rahman, Diljit, etc. -->
+          </div>
         </div>
 
         <!-- Section: Recently Played (Last 20 Songs) -->
@@ -837,6 +934,101 @@
 
     </main>
 
+      </div> <!-- /.spotify-main -->
+    </div> <!-- /.spotify-shell -->
+
+    <!-- ================= SPOTIFY PERSISTENT DOCK PLAYER (ALWAYS ACCESSIBLE ON DESKTOP & TABLET) ================= -->
+    <footer class="spotify-player-bar" id="spotify-player-bar">
+      <!-- Left: Track Info -->
+      <div class="dock-track-info" id="dock-expand-trigger" title="Click to expand Now Playing">
+        <div class="dock-art-wrapper">
+          <img id="dock-art" src="https://c.saavncdn.com/366/Pushpa-2-The-Rule-Telugu-Telugu-2024-20241205211012-500x500.jpg" alt="Cover" class="dock-art">
+        </div>
+        <div class="dock-text-wrap">
+          <div class="dock-title-row">
+            <span class="dock-title" id="dock-title">Select a Song</span>
+          </div>
+          <span class="dock-artist" id="dock-artist">Swaram • Indian Cinema</span>
+        </div>
+        <button id="dock-like-btn" class="dock-icon-btn" title="Save to Liked Songs">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+        </button>
+        <button id="dock-yt-btn" class="dock-icon-btn dock-yt-icon" title="Watch Video on YouTube">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+        </button>
+      </div>
+
+      <!-- Center: Playback Controls & Timeline -->
+      <div class="dock-player-center">
+        <div class="dock-controls-row">
+          <button id="dock-shuffle-btn" class="dock-ctrl-btn" title="Shuffle (S)">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+          </button>
+          <button id="dock-prev-btn" class="dock-ctrl-btn" title="Previous (P)">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2"></line></svg>
+          </button>
+          <button id="dock-play-btn" class="dock-play-circle-btn" title="Play / Pause (Space)">
+            <svg id="dock-play-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <svg id="dock-pause-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" class="hidden"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+          </button>
+          <button id="dock-next-btn" class="dock-ctrl-btn" title="Next (N)">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2"></line></svg>
+          </button>
+          <button id="dock-repeat-btn" class="dock-ctrl-btn" title="Repeat (R)">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+            <span id="dock-repeat-indicator" class="repeat-one-indicator hidden">1</span>
+          </button>
+        </div>
+        <div class="dock-seekbar-row">
+          <span id="dock-current-time" class="dock-time">0:00</span>
+          <div class="dock-slider-wrap">
+            <input type="range" id="dock-seek-slider" min="0" max="100" value="0" step="0.1">
+          </div>
+          <span id="dock-total-time" class="dock-time">0:00</span>
+        </div>
+      </div>
+
+      <!-- Right: Secondary Tools & Volume -->
+      <div class="dock-player-right">
+        <button id="dock-lyrics-btn" class="dock-tool-btn" title="Lyrics">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        </button>
+        <button id="dock-queue-btn" class="dock-tool-btn" title="Queue">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>
+        </button>
+        <div class="dock-volume-wrap">
+          <button id="dock-mute-btn" class="dock-mute-btn" title="Mute/Unmute">
+            <svg id="dock-volume-high" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+            <svg id="dock-volume-muted" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" class="hidden"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+          </button>
+          <input type="range" id="dock-volume-slider" min="0" max="1" step="0.01" value="0.8" class="dock-volume-slider">
+        </div>
+        <button id="dock-expand-btn" class="dock-tool-btn dock-expand-icon" title="Full Screen View">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+        </button>
+      </div>
+    </footer>
+
+    <!-- Mobile Bottom Navigation Bar (<768px) -->
+    <nav class="mobile-bottom-nav" id="mobile-bottom-nav">
+      <button class="nav-tab active" data-tab="home">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        <span>Home</span>
+      </button>
+      <button class="nav-tab" data-tab="search-results">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <span>Search</span>
+      </button>
+      <button class="nav-tab" data-tab="playlists">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+        <span>Library</span>
+      </button>
+      <button class="nav-tab" data-tab="downloads">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <span>Downloads</span>
+      </button>
+    </nav>
+
     <!-- ================= FLOATING MINI PLAYER (RETRO MUSIC SIGNATURE PILL) ================= -->
     <div id="retro-mini-player" class="retro-mini-player hidden">
       <!-- Mini Progress Line -->
@@ -1333,6 +1525,6 @@
   <!-- YouTube IFrame API Script -->
   <script src="https://www.youtube.com/iframe_api"></script>
   <!-- Application Script -->
-  <script src="app.js?v=2.7"></script>
+  <script src="app.js?v=3.0"></script>
 </body>
 </html>
