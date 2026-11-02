@@ -92,10 +92,12 @@ function getCleanSongKey(song) {
   return title;
 }
 
-// Strict song deduplication helper (by ID and clean title key)
-function dedupeSongs(songs, seenKeysSet = null) {
+// Strict song deduplication helper with thumbnail cover art & movie diversity protection
+function dedupeSongs(songs, seenKeysSet = null, maxPerCover = 1) {
   const seenIds = new Set();
   const seenKeys = seenKeysSet || new Set();
+  const coverCounts = new Map();
+  const movieCounts = new Map();
   const unique = [];
 
   for (const song of songs) {
@@ -104,8 +106,26 @@ function dedupeSongs(songs, seenKeysSet = null) {
     const key = getCleanSongKey(song);
     if (key && seenKeys.has(key)) continue;
 
+    // Check unique thumbnail image (strip dimensions to get true album art ID)
+    const imgKey = (song.image || '')
+      .replace(/-500x500\.jpg|-150x150\.jpg|-50x50\.jpg/g, '')
+      .toLowerCase()
+      .trim();
+    const currentImgCount = coverCounts.get(imgKey) || 0;
+    if (imgKey && maxPerCover && currentImgCount >= maxPerCover) continue;
+
+    // Check clean movie / album name
+    const movieKey = (song.movie || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '')
+      .slice(0, 16);
+    const currentMovieCount = movieCounts.get(movieKey) || 0;
+    if (movieKey && movieKey.length >= 3 && maxPerCover && currentMovieCount >= maxPerCover) continue;
+
     seenIds.add(song.id);
     if (key) seenKeys.add(key);
+    if (imgKey) coverCounts.set(imgKey, currentImgCount + 1);
+    if (movieKey && movieKey.length >= 3) movieCounts.set(movieKey, currentMovieCount + 1);
     unique.push(song);
   }
   return unique;
@@ -341,8 +361,8 @@ async function getTrendingSongs(industry = 'all') {
     }
   }
 
-  // Deduplicate strictly by ID and clean title key
-  const results = dedupeSongs(rawList);
+  // Deduplicate strictly by ID, clean title key, and unique album thumbnail
+  const results = dedupeSongs(rawList, null, 1);
 
   if (results.length > 0) {
     cachedTrendingByIndustry[indKey] = results;
@@ -789,8 +809,11 @@ const server = http.createServer(async (req, res) => {
 
     const queries = cat.queries || [cat.query];
     const rawSongs = [];
+    const seenCategoryImages = new Set();
+    const seenCategoryMovies = new Set();
+
     for (const q of queries) {
-      const data = await fetchSaavn(`__call=search.getResults&p=1&n=12&q=${encodeURIComponent(q)}`);
+      const data = await fetchSaavn(`__call=search.getResults&p=1&n=6&q=${encodeURIComponent(q)}`);
       if (data?.results) {
         for (const item of data.results) {
           const formatted = formatSong(item);
@@ -799,13 +822,24 @@ const server = http.createServer(async (req, res) => {
             const sLang = (formatted.language || '').toLowerCase();
             if (sLang && !sLang.includes(targetLang)) continue;
           }
+
+          const imgKey = (formatted.image || '').replace(/-500x500\.jpg|-150x150\.jpg|-50x50\.jpg/g, '').toLowerCase().trim();
+          const movieKey = (formatted.movie || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 16);
+
+          // Guarantee strict thumbnail and movie diversity across all category songs
+          if (imgKey && seenCategoryImages.has(imgKey)) continue;
+          if (movieKey && movieKey.length >= 3 && seenCategoryMovies.has(movieKey)) continue;
+
+          if (imgKey) seenCategoryImages.add(imgKey);
+          if (movieKey && movieKey.length >= 3) seenCategoryMovies.add(movieKey);
           rawSongs.push(formatted);
+          break; // Take the top hit for this movie query, then proceed to the next distinct movie!
         }
       }
-      if (rawSongs.length >= 45) break;
+      if (rawSongs.length >= 24) break;
     }
 
-    const songs = dedupeSongs(rawSongs).slice(0, 35);
+    const songs = dedupeSongs(rawSongs, null, 1).slice(0, 24);
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ success: true, category: cat, songs }));
     return;

@@ -2859,6 +2859,31 @@ function getCleanSongKey(song) {
   return title;
 }
 
+function getCleanImageKey(imageUrl) {
+  if (!imageUrl) return '';
+  return imageUrl
+    .replace(/-[0-9]+x[0-9]+\.(jpg|jpeg|png|webp)/i, '')
+    .replace(/\?.*$/, '')
+    .toLowerCase()
+    .trim();
+}
+
+function getCleanMovieKey(movie) {
+  if (!movie) return '';
+  return movie
+    .toLowerCase()
+    .replace(/&quot;/g, '')
+    .replace(/&#039;/g, '')
+    .replace(/&amp;/g, '&')
+    .replace(/\(.*?\)/g, '')
+    .replace(/\[.*?\]/g, '')
+    .replace(/telugu|hindi|tamil|kannada|malayalam|punjabi/gi, '')
+    .replace(/songs|soundtrack|album|ost|movie|film/gi, '')
+    .replace(/[^a-z0-9]/g, '')
+    .slice(0, 16)
+    .trim();
+}
+
 // --- Card & Table Generators ---
 function createSongCard(song, songList) {
   const card = document.createElement('div');
@@ -3026,9 +3051,27 @@ async function loadTrending(industry = 'all') {
   if (carousel) carousel.innerHTML = '';
   if (tbody) tbody.innerHTML = '';
 
+  const carouselSeenImages = new Set();
+  const carouselSeenMovies = new Set();
+  const carouselSongs = [];
+
   res.songs.forEach((song, i) => {
-    if (carousel) carousel.appendChild(createSongCard(song, res.songs));
     if (tbody) tbody.appendChild(renderSongRow(song, i, res.songs));
+
+    if (carousel) {
+      const imgKey = getCleanImageKey(song.image);
+      const movieKey = getCleanMovieKey(song.movie);
+
+      // Enforce strict thumbnail & movie diversity in trending carousel
+      if (!carouselSeenImages.has(imgKey) && (!movieKey || movieKey.length < 3 || !carouselSeenMovies.has(movieKey))) {
+        if (imgKey) carouselSeenImages.add(imgKey);
+        if (movieKey && movieKey.length >= 3) carouselSeenMovies.add(movieKey);
+        carouselSongs.push(song);
+        if (carouselSongs.length <= 15) {
+          carousel.appendChild(createSongCard(song, res.songs));
+        }
+      }
+    }
   });
 
   const langName = formatLanguageName(industry);
@@ -3099,10 +3142,25 @@ async function loadCarousels() {
     if (res && res.songs) {
       container.innerHTML = '';
       const uniqueForCarousel = [];
+      const carouselSeenImages = new Set();
+      const carouselSeenMovies = new Set();
+
       for (const song of res.songs) {
         const key = getCleanSongKey(song);
+        const imgKey = getCleanImageKey(song.image);
+        const movieKey = getCleanMovieKey(song.movie);
+
+        // Strict thumbnail and movie diversity check per shelf - no 2 cards share thumbnail or movie!
+        if (imgKey && carouselSeenImages.has(imgKey)) continue;
+        if (movieKey && movieKey.length >= 3 && carouselSeenMovies.has(movieKey)) continue;
+
+        // Home deduplication check: skip if already showcased on another home carousel
         if (key && homeSeenKeys.has(key)) continue;
+
         if (key) homeSeenKeys.add(key);
+        if (imgKey) carouselSeenImages.add(imgKey);
+        if (movieKey && movieKey.length >= 3) carouselSeenMovies.add(movieKey);
+
         uniqueForCarousel.push(song);
         if (uniqueForCarousel.length >= 10) break;
       }
