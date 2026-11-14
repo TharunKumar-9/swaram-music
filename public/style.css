@@ -88,12 +88,21 @@ body.theme-gold {
   -webkit-tap-highlight-color: transparent;
 }
 
+html, body {
+  height: 100%;
+  height: 100dvh;
+  max-height: 100%;
+  max-height: 100dvh;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Perfect fit on screen: zero window-level overflow */
+}
+
 body {
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--bg-base);
   color: var(--text-primary);
-  min-height: 100vh;
-  overflow-x: hidden;
   user-select: none;
   -webkit-font-smoothing: antialiased;
 }
@@ -137,8 +146,13 @@ body {
   z-index: 1;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  padding-bottom: 120px; /* Space for floating mini player */
+  height: 100%;
+  height: 100dvh;
+  max-height: 100%;
+  max-height: 100dvh;
+  width: 100%;
+  padding-bottom: 0 !important;
+  overflow: hidden;
 }
 
 /* ================= APP HEADER ================= */
@@ -3976,8 +3990,9 @@ body.is-playing .vinyl-disc {
 /* 1. App Shell Container */
 .spotify-shell {
   display: flex;
-  height: 100vh;
-  width: 100vw;
+  height: calc(100% - 84px);
+  height: calc(100dvh - 84px);
+  width: 100%;
   overflow: hidden;
   position: relative;
   background-color: var(--bg-base);
@@ -3985,10 +4000,10 @@ body.is-playing .vinyl-disc {
 
 /* 2. Spotify Left Sidebar */
 .spotify-sidebar {
-  width: 290px;
-  min-width: 290px;
-  max-width: 290px;
-  height: calc(100vh - 84px);
+  width: 280px;
+  min-width: 280px;
+  max-width: 280px;
+  height: 100%;
   background-color: #000000;
   display: flex;
   flex-direction: column;
@@ -4284,7 +4299,7 @@ body.is-playing .vinyl-disc {
 /* 3. Right Main Area */
 .spotify-main {
   flex: 1;
-  height: calc(100vh - 84px);
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
@@ -4292,6 +4307,7 @@ body.is-playing .vinyl-disc {
   background-color: var(--bg-base);
   scroll-behavior: smooth;
   position: relative;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Spotify Sleek Topbar */
@@ -4300,6 +4316,7 @@ body.is-playing .vinyl-disc {
   top: 0;
   z-index: 90;
   height: 64px;
+  min-height: 64px;
   padding: 0 28px;
   background-color: rgba(18, 18, 18, 0.88);
   backdrop-filter: blur(20px);
@@ -4308,6 +4325,8 @@ body.is-playing .vinyl-disc {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
+  box-sizing: border-box;
 }
 
 .nav-history-arrows {
@@ -4825,67 +4844,634 @@ body.is-playing .vinyl-disc {
   box-shadow: none;
 }
 
-/* 8. Responsive Adaptations */
-@media (max-width: 1024px) {
+/* ==========================================================================
+   8. SCREEN FIT & RESPONSIVE ADAPTATION SYSTEM (Mobile & Laptop Precision)
+   ========================================================================== */
+
+/* A. Desktop & Laptop Baseline (>= 769px) */
+@media (min-width: 769px) {
+  .retro-mini-player {
+    display: none !important; /* Floating pill is mobile-only; desktop has dock player */
+  }
+  .mobile-bottom-nav {
+    display: none !important;
+  }
+  .mobile-brand-logo {
+    display: none !important;
+  }
+  .spotify-sidebar {
+    display: flex !important;
+  }
+  .spotify-player-bar {
+    display: flex !important;
+  }
+}
+
+/* B. Laptop & Compact Screen Optimization (769px - 1200px, e.g. 1366x768, 1440x900) */
+@media (min-width: 769px) and (max-width: 1200px) {
+  .spotify-shell {
+    height: calc(100% - 76px);
+    height: calc(100dvh - 76px);
+  }
   .spotify-sidebar {
     width: 240px;
     min-width: 240px;
     max-width: 240px;
+    padding: 8px 8px 6px 8px;
   }
-  .quick-picks-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .sidebar-brand {
+    padding: 10px 12px;
+  }
+  .sidebar-nav button.nav-tab {
+    padding: 8px 12px;
+    font-size: 0.88rem;
+    gap: 12px;
+  }
+  .spotify-topbar {
+    height: 58px;
+    min-height: 58px;
+    padding: 0 20px;
+    gap: 12px;
+  }
+  .spotify-topbar .search-container {
+    width: 320px;
+    height: 38px;
+  }
+  .spotify-topbar .search-container:focus-within {
+    width: 360px;
+  }
+  .spotify-player-bar {
+    height: 76px;
+    padding: 0 16px;
+  }
+  .dock-art-wrapper {
+    width: 48px;
+    height: 48px;
+  }
+  .dock-title {
+    font-size: 0.86rem;
+  }
+  .dock-artist {
+    font-size: 0.72rem;
+  }
+  .dock-controls-row {
+    gap: 14px;
   }
   .dock-volume-wrap {
-    width: 80px;
+    width: 90px;
+  }
+  .main-viewport {
+    padding: 16px 20px 40px 20px;
+  }
+  .quick-picks-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .quick-pick-card {
+    height: 56px;
+  }
+  .cards-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+  }
+  .music-card {
+    width: 100%;
+    flex: none;
+    padding: 12px;
+  }
+  .hero-banner {
+    padding: 24px 28px;
+    margin-bottom: 24px;
+  }
+  .hero-title {
+    font-size: 2.2rem;
   }
 }
 
+/* C. Mobile & Small Tablet Optimization (<= 768px) */
 @media (max-width: 768px) {
+  html, body {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .app-layout {
+    height: 100%;
+    height: 100dvh;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .spotify-shell {
+    height: 100%;
+    height: 100dvh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
   .spotify-sidebar {
     display: none !important;
   }
+
   .spotify-player-bar {
     display: none !important;
   }
-  .mobile-bottom-nav {
-    display: flex !important;
-  }
-  .mobile-brand-logo {
-    display: flex !important;
-  }
+
   .nav-history-arrows {
     display: none !important;
   }
-  .spotify-main {
-    height: 100vh;
-    padding-bottom: 120px;
+
+  .mobile-bottom-nav {
+    display: flex !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background-color: rgba(18, 18, 18, 0.98);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    z-index: 1000;
+    align-items: center;
+    justify-content: space-around;
+    box-sizing: border-box;
   }
+
+  .mobile-bottom-nav .nav-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: transparent;
+    border: none;
+    color: #a7a7a7;
+    font-size: 0.68rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 6px 0;
+    transition: color 0.2s ease;
+  }
+
+  .mobile-bottom-nav .nav-tab svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .mobile-bottom-nav .nav-tab.active {
+    color: var(--accent-color, #1ed760) !important;
+  }
+
+  /* Floating Mini Player (Mobile Position: Directly above Bottom Nav) */
   .retro-mini-player {
     display: block;
     position: fixed;
-    bottom: 64px !important;
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 6px) !important;
     left: 8px !important;
     right: 8px !important;
+    width: calc(100% - 16px) !important;
+    max-width: none !important;
+    transform: none !important;
+    height: 56px;
     margin: 0 !important;
     border-radius: 8px !important;
-    z-index: 999 !important;
-    background: rgba(30, 30, 34, 0.96) !important;
-    backdrop-filter: blur(20px) !important;
+    z-index: 998 !important;
+    background: rgba(24, 24, 28, 0.96) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7) !important;
   }
-  .quick-picks-grid {
-    grid-template-columns: repeat(2, 1fr);
+
+  .retro-mini-player.hidden {
+    display: none !important;
+  }
+
+  .mini-player-body {
+    height: 100%;
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .mini-art-wrapper {
+    width: 42px;
+    height: 42px;
+    border-radius: 4px;
+  }
+
+  .mini-title {
+    font-size: 0.84rem;
+    max-width: 140px;
+  }
+
+  .mini-artist {
+    font-size: 0.72rem;
+    max-width: 140px;
+  }
+
+  /* Mobile Topbar */
+  .spotify-topbar {
+    height: auto;
+    min-height: 54px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .spotify-topbar .header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mobile-brand-logo {
+    display: flex !important;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .mobile-brand-logo .brand-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+  }
+
+  .mobile-brand-logo .brand-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .mobile-brand-logo .brand-name {
+    font-size: 0.92rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #ffffff;
+  }
+
+  .spotify-topbar .search-container {
+    flex: 1;
+    min-width: 0;
+    max-width: none;
+    width: auto;
+    height: 36px;
+    padding: 0 10px;
+    font-size: 0.8rem;
+    background-color: #242424;
+    border-radius: 500px;
+  }
+
+  .spotify-topbar .search-container input {
+    font-size: 0.8rem;
+  }
+
+  .spotify-topbar .search-container:focus-within {
+    width: auto;
+  }
+
+  .spotify-topbar .header-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .quality-badge {
+    display: none !important;
+  }
+
+  .account-btn {
+    padding: 6px !important;
+    border-radius: 50%;
+  }
+
+  .account-btn .account-name {
+    display: none !important;
+  }
+
+  .header-queue-btn, #theme-btn {
+    width: 32px;
+    height: 32px;
+    padding: 6px;
+  }
+
+  /* Mobile Main Workspace & Scrolling */
+  .spotify-main {
+    height: 100% !important;
+    height: 100dvh !important;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .main-viewport {
+    padding: 12px 12px;
+    /* Generous bottom padding so the last item in any view is fully reachable above mini player and bottom nav */
+    padding-bottom: calc(56px + 62px + env(safe-area-inset-bottom, 0px) + 24px) !important;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Mobile Home Hero Banner */
+  .hero-banner {
+    flex-direction: column;
+    text-align: center;
+    padding: 18px 14px;
+    margin-bottom: 20px;
+    gap: 16px;
+  }
+
+  .hero-art-container {
+    width: 160px;
+    height: 160px;
+    margin: 0 auto;
+  }
+
+  .hero-title {
+    font-size: 1.5rem;
+    line-height: 1.2;
+    margin-bottom: 6px;
+  }
+
+  .hero-subtitle {
+    font-size: 0.82rem;
+    margin-bottom: 14px;
+  }
+
+  .hero-actions {
+    justify-content: center;
+    flex-wrap: wrap;
     gap: 8px;
   }
+
+  .hero-actions .btn {
+    flex: 1 1 120px;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    justify-content: center;
+  }
+
+  /* Quick Picks 2-Column Grid on Mobile */
+  .quick-picks-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    margin-bottom: 18px;
+  }
+
   .quick-pick-card {
-    height: 54px;
+    height: 50px !important;
   }
+
   .quick-pick-art, .quick-pick-tile-liked {
-    width: 54px;
-    height: 54px;
+    width: 50px !important;
+    height: 50px !important;
   }
+
   .quick-pick-title {
+    font-size: 0.8rem !important;
+    padding: 0 8px;
+  }
+
+  /* Mobile 2-Column Card Grid (Spotify Mobile Standard) */
+  .cards-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  .music-card {
+    width: 100% !important;
+    flex: none !important;
+    padding: 10px !important;
+    box-sizing: border-box;
+  }
+
+  .card-art-wrap {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 1 !important;
+    margin-bottom: 8px !important;
+  }
+
+  .card-title {
+    font-size: 0.84rem !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-subtitle {
+    font-size: 0.72rem !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Touch Horizontal Carousels */
+  .cards-carousel {
+    display: flex;
+    overflow-x: auto;
+    gap: 10px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+  }
+
+  .cards-carousel .music-card {
+    flex: 0 0 135px !important;
+    width: 135px !important;
+    scroll-snap-align: start;
+  }
+
+  /* Horizontal Filter Chips (Smooth Touch Scrolling) */
+  .category-chips-bar,
+  .songs-lang-chips,
+  .albums-trend-chips {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    gap: 8px !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: 4px !important;
+    scrollbar-width: none !important;
+  }
+
+  .category-chips-bar::-webkit-scrollbar,
+  .songs-lang-chips::-webkit-scrollbar,
+  .albums-trend-chips::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .category-chip,
+  .songs-lang-chip {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    padding: 6px 14px !important;
+    font-size: 0.78rem !important;
+  }
+
+  .songs-lang-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  /* Mobile Song Table Cells */
+  .songs-table th.col-movie,
+  .songs-table td.col-movie {
+    display: none;
+  }
+
+  .songs-table th.col-num,
+  .songs-table td.col-num {
+    width: 24px;
+    padding: 8px 4px;
+    font-size: 0.78rem;
+  }
+
+  .song-title-cell {
+    gap: 8px;
+  }
+
+  .song-cell-art {
+    width: 40px;
+    height: 40px;
+  }
+
+  .song-title-text {
+    font-size: 0.84rem;
+    max-width: 150px;
+  }
+
+  .song-mobile-subtitle {
+    font-size: 0.72rem;
+    max-width: 150px;
+  }
+
+  /* Mobile Detail View Header */
+  .detail-hero {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 16px;
+    padding: 20px 14px;
+    margin-bottom: 20px;
+  }
+
+  .detail-cover {
+    width: 160px;
+    height: 160px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
+  }
+
+  .detail-title {
+    font-size: 1.5rem;
+    margin-bottom: 6px;
+  }
+
+  .detail-desc {
+    font-size: 0.8rem;
+    margin-bottom: 14px;
+  }
+
+  .detail-actions {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* Full Screen Now Playing Sheet Mobile Precision */
+  .now-playing-sheet {
+    z-index: 2000 !important;
+    height: 100% !important;
+    height: 100dvh !important;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .now-playing-sheet .sheet-content {
+    padding: 12px 14px 20px 14px;
+    min-height: 100%;
+    justify-content: space-between;
+  }
+
+  .sheet-album-art {
+    max-width: min(68vw, 260px) !important;
+    max-height: min(68vw, 260px) !important;
+    margin: 0 auto;
+  }
+
+  .sheet-title {
+    font-size: 1.3rem;
+  }
+
+  .sheet-subtitle {
     font-size: 0.85rem;
-    padding: 0 10px;
+  }
+
+  .sheet-controls-row {
+    gap: 16px;
+  }
+
+  /* Language Onboarding Modal Mobile Fit */
+  .onboarding-modal-box {
+    width: 95% !important;
+    max-width: 480px !important;
+    max-height: 90dvh !important;
+    overflow-y: auto !important;
+    padding: 20px 16px !important;
+  }
+
+  .onboarding-lang-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    max-height: 52vh !important;
+    overflow-y: auto !important;
+  }
+
+  .onboarding-lang-card {
+    min-height: 84px !important;
+    padding: 10px 8px !important;
+  }
+
+  .lang-native-script {
+    font-size: 1.15rem !important;
+  }
+}
+
+/* D. Ultra-Compact Mobile Phones (<= 380px: iPhone SE, Galaxy Fold outer screen) */
+@media (max-width: 380px) {
+  .spotify-topbar .search-container {
+    font-size: 0.75rem;
+    padding: 0 8px;
+  }
+  .mobile-brand-logo .brand-name {
+    display: none; /* Icon-only logo on ultra-narrow screens */
+  }
+  .cards-grid {
+    gap: 8px !important;
+  }
+  .music-card {
+    padding: 8px !important;
+  }
+  .sheet-album-art {
+    max-width: 210px !important;
+    max-height: 210px !important;
   }
 }
 

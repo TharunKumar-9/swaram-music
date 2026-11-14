@@ -1,5 +1,5 @@
 // Swaram — Service Worker for Offline App Loading
-const CACHE_NAME = 'swaram-v13';
+const CACHE_NAME = 'swaram-v14';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

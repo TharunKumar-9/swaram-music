@@ -4346,7 +4346,7 @@ function initApp() {
   if ('caches' in window) {
     caches.keys().then(keys => {
       keys.forEach(k => {
-        if (k !== 'swaram-v13') caches.delete(k);
+        if (k !== 'swaram-v14') caches.delete(k);
       });
     }).catch(() => {});
   }
