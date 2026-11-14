@@ -358,7 +358,8 @@ const INDUSTRIES = [
   { id: 'telugu', title: 'Tollywood (Telugu)', desc: 'Pushpa 2, Devara, RRR, Kalki 2898 AD, Guntur Kaaram' },
   { id: 'kannada', title: 'Sandalwood (Kannada)', desc: 'KGF 1 & 2, Kantara, Salaar, Ravi Basrur, Sanjith Hegde' },
   { id: 'malayalam', title: 'Mollywood (Malayalam)', desc: 'Aavesham, Manjummel Boys, Premalu, Sushin Shyam' },
-  { id: 'punjabi', title: 'Punjabi & Pop Hits', desc: 'Diljit Dosanjh, Karan Aujla, AP Dhillon' }
+  { id: 'punjabi', title: 'Punjabi & Pop Hits', desc: 'Diljit Dosanjh, Karan Aujla, AP Dhillon' },
+  { id: 'english', title: 'English & Global Pop', desc: 'The Weeknd, Ed Sheeran, Taylor Swift, Billie Eilish & global pop hits' }
 ];
 
 const INDUSTRY_QUERIES = {
@@ -408,6 +409,11 @@ const INDUSTRY_QUERIES = {
     'Shubh Punjabi Songs', 'Sidhu Moose Wala Hits', 'Suniyan Suniyan Punjabi', 'Lover Diljit Dosanjh',
     'Softly Karan Aujla', 'With You AP Dhillon', 'Excuses AP Dhillon', 'Hass Hass Diljit Dosanjh',
     'Naina Diljit Dosanjh', 'Born to Shine Diljit', '52 Bars Karan Aujla'
+  ],
+  english: [
+    'Blinding Lights The Weeknd', 'Shape of You Ed Sheeran', 'Starboy The Weeknd', 'Stay Justin Bieber Kid LAROI',
+    'As It Was Harry Styles', 'Espresso Sabrina Carpenter', 'Birds of a Feather Billie Eilish', 'Cruel Summer Taylor Swift',
+    'Levitating Dua Lipa', 'Flowers Miley Cyrus', 'Perfect Ed Sheeran', 'Someone You Loved Lewis Capaldi'
   ]
 };
 
@@ -443,8 +449,15 @@ async function getTrendingSongs(industry = 'all') {
     }
   }
 
+  // Filter out any remixes, slowed, reverb, bootleg cuts from trending
+  const filteredList = rawList.filter(s => {
+    const title = (s.title || '').toLowerCase();
+    const movie = (s.movie || '').toLowerCase();
+    return !REMIX_KEYWORDS_REGEX.test(title) && !REMIX_KEYWORDS_REGEX.test(movie);
+  });
+
   // Deduplicate strictly by ID, clean title key, and unique album thumbnail
-  const results = dedupeSongs(rawList, null, 1);
+  const results = dedupeSongs(filteredList, null, 1);
 
   if (results.length > 0) {
     cachedTrendingByIndustry[indKey] = results;
@@ -518,7 +531,8 @@ const ALL_CATEGORIES = [
   { id: 'kollywood_hits', title: 'Kollywood Hits (Tamil)', desc: 'Top Tamil movie soundtracks', queries: INDUSTRY_QUERIES.tamil },
   { id: 'sandalwood_hits', title: 'Sandalwood Hits (Kannada)', desc: 'KGF, Kantara & Kannada hits', queries: INDUSTRY_QUERIES.kannada },
   { id: 'mollywood_hits', title: 'Mollywood Vibes (Malayalam)', desc: 'Aavesham, Manjummel Boys & Malayalam magic', queries: INDUSTRY_QUERIES.malayalam },
-  { id: 'punjabi_hits', title: 'Punjabi Pop & Beats', desc: 'Diljit, Karan Aujla & Punjabi fire', queries: INDUSTRY_QUERIES.punjabi }
+  { id: 'punjabi_hits', title: 'Punjabi Pop & Beats', desc: 'Diljit, Karan Aujla & Punjabi fire', queries: INDUSTRY_QUERIES.punjabi },
+  { id: 'english_hits', title: 'English & Global Pop Hits', desc: 'The Weeknd, Ed Sheeran, Taylor Swift, Billie Eilish', queries: INDUSTRY_QUERIES.english }
 ];
 
 const CATEGORIES = ALL_CATEGORIES;
@@ -898,6 +912,8 @@ const server = http.createServer(async (req, res) => {
       targetLang = 'malayalam';
     } else if (catId === 'punjabi_hits') {
       targetLang = 'punjabi';
+    } else if (catId === 'english_hits') {
+      targetLang = 'english';
     }
 
     const queries = cat.queries || [cat.query];
@@ -915,6 +931,10 @@ const server = http.createServer(async (req, res) => {
             const sLang = (formatted.language || '').toLowerCase();
             if (sLang && !sLang.includes(targetLang)) continue;
           }
+
+          const sTitle = (formatted.title || '').toLowerCase();
+          const sAlbum = (formatted.movie || formatted.album || '').toLowerCase();
+          if (REMIX_KEYWORDS_REGEX.test(sTitle) || REMIX_KEYWORDS_REGEX.test(sAlbum)) continue;
 
           const imgKey = (formatted.image || '').replace(/-500x500\.jpg|-150x150\.jpg|-50x50\.jpg/g, '').toLowerCase().trim();
           const movieKey = (formatted.movie || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 16);

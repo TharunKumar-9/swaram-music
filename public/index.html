@@ -69,6 +69,10 @@
               <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
               <span>YouTube Video</span>
             </button>
+            <button class="nav-tab" data-tab="settings" id="side-nav-settings">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              <span>Settings</span>
+            </button>
           </nav>
         </div>
 
@@ -308,7 +312,7 @@
         </div>
 
         <!-- Section 2: Tollywood Chartbusters (Telugu) -->
-        <div class="section-container">
+        <div class="section-container" data-lang-shelf="telugu">
           <div class="section-header">
             <div>
               <h2 class="section-title">Tollywood Blockbusters (Telugu)</h2>
@@ -322,7 +326,7 @@
         </div>
 
         <!-- Section 3: Bollywood Mega Blockbusters (Hindi) -->
-        <div class="section-container">
+        <div class="section-container" data-lang-shelf="hindi">
           <div class="section-header">
             <div>
               <h2 class="section-title">Bollywood Blockbusters</h2>
@@ -336,7 +340,7 @@
         </div>
 
         <!-- Section 3: Kollywood Thunder (Tamil) -->
-        <div class="section-container">
+        <div class="section-container" data-lang-shelf="tamil">
           <div class="section-header">
             <div>
               <h2 class="section-title">Kollywood Hits (Tamil)</h2>
@@ -350,7 +354,7 @@
         </div>
 
         <!-- Section 4: Sandalwood Fire (Kannada) -->
-        <div class="section-container">
+        <div class="section-container" data-lang-shelf="kannada">
           <div class="section-header">
             <div>
               <h2 class="section-title">Sandalwood Hits (Kannada)</h2>
@@ -364,7 +368,7 @@
         </div>
 
         <!-- Section 5: Mollywood Vibes (Malayalam) -->
-        <div class="section-container">
+        <div class="section-container" data-lang-shelf="malayalam">
           <div class="section-header">
             <div>
               <h2 class="section-title">Mollywood Vibes (Malayalam)</h2>
@@ -378,15 +382,29 @@
         </div>
 
         <!-- Section 6: Punjabi & Indie Pop Hits -->
-        <div class="section-container">
+        <div class="section-container" data-lang-shelf="punjabi">
           <div class="section-header">
             <div>
               <h2 class="section-title">Punjabi Pop & Beats</h2>
               <p class="section-subtitle">Diljit Dosanjh, Karan Aujla, Tauba Tauba & AP Dhillon</p>
             </div>
-            <button class="view-all-btn" data-category="ind_punjabi">See More</button>
+            <button class="view-all-btn" data-category="punjabi_hits">See More</button>
           </div>
           <div class="cards-carousel" id="punjabi-carousel">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Section 7: English & Global Pop Hits -->
+        <div class="section-container" data-lang-shelf="english">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">English & Global Pop Hits</h2>
+              <p class="section-subtitle">The Weeknd, Ed Sheeran, Taylor Swift, Billie Eilish & global pop</p>
+            </div>
+            <button class="view-all-btn" data-category="english_hits">See More</button>
+          </div>
+          <div class="cards-carousel" id="english-carousel">
             <!-- Populated by JS -->
           </div>
         </div>
@@ -586,13 +604,14 @@
             <span>CATEGORIZE BY LANGUAGE:</span>
           </div>
           <div class="songs-lang-chips" id="songs-lang-chips">
-            <button class="songs-lang-chip active" data-lang="all">🌐 All Languages</button>
-            <button class="songs-lang-chip" data-lang="telugu">🦁 Tollywood (Telugu)</button>
-            <button class="songs-lang-chip" data-lang="hindi">👑 Bollywood (Hindi)</button>
-            <button class="songs-lang-chip" data-lang="tamil">⚡ Kollywood (Tamil)</button>
-            <button class="songs-lang-chip" data-lang="kannada">🌲 Sandalwood (Kannada)</button>
-            <button class="songs-lang-chip" data-lang="malayalam">🌊 Mollywood (Malayalam)</button>
-            <button class="songs-lang-chip" data-lang="punjabi">🚀 Punjabi Pop</button>
+            <button class="songs-lang-chip active" data-lang="all">All Languages</button>
+            <button class="songs-lang-chip" data-lang="telugu">Tollywood (Telugu)</button>
+            <button class="songs-lang-chip" data-lang="hindi">Bollywood (Hindi)</button>
+            <button class="songs-lang-chip" data-lang="tamil">Kollywood (Tamil)</button>
+            <button class="songs-lang-chip" data-lang="kannada">Sandalwood (Kannada)</button>
+            <button class="songs-lang-chip" data-lang="malayalam">Mollywood (Malayalam)</button>
+            <button class="songs-lang-chip" data-lang="punjabi">Punjabi Pop</button>
+            <button class="songs-lang-chip" data-lang="english">English & Global</button>
           </div>
         </div>
 
@@ -915,19 +934,214 @@
 
           <!-- Quick category chips inside playlist add section -->
           <div class="playlist-quick-chips" id="playlist-quick-chips">
-            <button class="category-chip active" data-source="trending">🔥 All Trending</button>
-            <button class="category-chip" data-source="tollywood">🎬 Tollywood</button>
-            <button class="category-chip" data-source="bollywood_hits">👑 Bollywood</button>
-            <button class="category-chip" data-source="kollywood_hits">⚡ Kollywood</button>
-            <button class="category-chip" data-source="sandalwood_hits">🌲 Sandalwood</button>
-            <button class="category-chip" data-source="melody">🎶 Melodies</button>
-            <button class="category-chip" data-source="energetic">⚡ Energetic</button>
-            <button class="category-chip" data-source="love">🌹 Love</button>
+            <button class="category-chip active" data-source="trending">All Trending</button>
+            <button class="category-chip" data-source="tollywood">Tollywood</button>
+            <button class="category-chip" data-source="bollywood_hits">Bollywood</button>
+            <button class="category-chip" data-source="kollywood_hits">Kollywood</button>
+            <button class="category-chip" data-source="sandalwood_hits">Sandalwood</button>
+            <button class="category-chip" data-source="melody">Melodies</button>
+            <button class="category-chip" data-source="energetic">Energetic</button>
+            <button class="category-chip" data-source="love">Love</button>
           </div>
 
           <!-- Quick-add list -->
           <div class="playlist-search-results" id="playlist-search-results">
             <!-- Populated dynamically with songs + instant add button -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 7: SETTINGS & PREFERENCES ================= -->
+      <section id="view-settings" class="tab-view">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Settings</h1>
+            <p class="view-subtitle">Customize music languages, streaming audio quality, appearance, and account</p>
+          </div>
+        </div>
+
+        <div class="settings-container">
+          <!-- 1. Music Languages Preference Card -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <div class="settings-icon-title">
+                <div class="settings-icon-bubble">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                </div>
+                <div>
+                  <h3 class="settings-section-title">Music Languages & Feed Personalization</h3>
+                  <p class="settings-section-sub">Choose which languages you listen to. We will prioritize these songs on your Home feed & trending charts.</p>
+                </div>
+              </div>
+              <button id="settings-open-onboarding-btn" class="btn btn-secondary btn-sm" title="Re-open full screen language onboarding">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+                <span>Full-Screen Setup</span>
+              </button>
+            </div>
+
+            <div class="settings-lang-grid" id="settings-lang-grid">
+              <!-- Rendered & synchronized dynamically with app state -->
+            </div>
+
+            <div class="settings-card-footer">
+              <div class="settings-lang-summary" id="settings-lang-summary">Active: Telugu, Hindi</div>
+              <button id="settings-save-lang-btn" class="btn btn-primary btn-sm">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="9 16.2 4.8 12 3.4 13.4 9 19 21 7 19.6 5.6 9 16.2"/></svg>
+                <span>Save & Update Feed</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. Streaming Audio Quality Card -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <div class="settings-icon-title">
+                <div class="settings-icon-bubble">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                </div>
+                <div>
+                  <h3 class="settings-section-title">Streaming Audio Quality</h3>
+                  <p class="settings-section-sub">Select bitrate for streaming songs across mobile and desktop</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-quality-list" id="settings-quality-list">
+              <div class="quality-radio-tile active" data-quality="320">
+                <div class="quality-radio-circle"></div>
+                <div class="quality-tile-info">
+                  <div class="quality-title-badge">
+                    <span class="quality-title">Very High (320 kbps)</span>
+                    <span class="quality-badge-rec">Recommended</span>
+                  </div>
+                  <span class="quality-desc">Ultra HD studio sound fidelity • Lossless master audio</span>
+                </div>
+              </div>
+
+              <div class="quality-radio-tile" data-quality="160">
+                <div class="quality-radio-circle"></div>
+                <div class="quality-tile-info">
+                  <div class="quality-title-badge">
+                    <span class="quality-title">High (160 kbps)</span>
+                  </div>
+                  <span class="quality-desc">Balanced high-fidelity • Fast loading & moderate data</span>
+                </div>
+              </div>
+
+              <div class="quality-radio-tile" data-quality="96">
+                <div class="quality-radio-circle"></div>
+                <div class="quality-tile-info">
+                  <div class="quality-title-badge">
+                    <span class="quality-title">Data Saver (96 kbps)</span>
+                  </div>
+                  <span class="quality-desc">Minimal mobile data • Instant buffering on low connectivity</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Appearance & Themes Card -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <div class="settings-icon-title">
+                <div class="settings-icon-bubble">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                </div>
+                <div>
+                  <h3 class="settings-section-title">Appearance & Themes</h3>
+                  <p class="settings-section-sub">Choose visual aesthetic and contrast</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-theme-chips" id="settings-theme-chips">
+              <button class="settings-theme-btn active" data-theme="amoled">
+                <span class="theme-color-dot" style="background:#000000; border:1px solid #1db954;"></span>
+                <span>AMOLED True Black</span>
+              </button>
+              <button class="settings-theme-btn" data-theme="dark">
+                <span class="theme-color-dot" style="background:#121212; border:1px solid #333333;"></span>
+                <span>Spotify Dark</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 4. Profile & Privacy Security Card -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <div class="settings-icon-title">
+                <div class="settings-icon-bubble">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </div>
+                <div>
+                  <h3 class="settings-section-title">Profile & Privacy Security</h3>
+                  <p class="settings-section-sub">Manage your music profile and 4-digit privacy lock</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-profile-bar">
+              <div class="settings-profile-avatar" id="settings-profile-avatar">🎧</div>
+              <div class="settings-profile-meta">
+                <div class="settings-profile-name" id="settings-profile-name">My Profile</div>
+                <div class="settings-profile-status" id="settings-profile-status">Privacy Protection Active</div>
+              </div>
+            </div>
+
+            <div class="settings-btn-row">
+              <button id="settings-manage-pin-btn" class="btn btn-secondary">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <span>Manage / Change PIN</span>
+              </button>
+              <button id="settings-switch-account-btn" class="btn btn-secondary">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+                <span>Switch / Add Profile</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 5. Offline Storage & Reset -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <div class="settings-icon-title">
+                <div class="settings-icon-bubble">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                </div>
+                <div>
+                  <h3 class="settings-section-title">Storage & History</h3>
+                  <p class="settings-section-sub">Manage offline downloads and listening history</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-btn-row">
+              <button id="settings-view-downloads-btn" class="btn btn-secondary">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>View Offline Downloads</span>
+              </button>
+              <button id="settings-clear-history-btn" class="btn btn-secondary">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                <span>Clear History</span>
+              </button>
+              <button id="settings-reset-onboarding-btn" class="btn btn-secondary">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
+                <span>Reset Language Setup</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 6. About Swaram Music Card -->
+          <div class="settings-card settings-about-card">
+            <div class="settings-about-row">
+              <div class="brand-icon">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+              </div>
+              <div>
+                <h4 class="settings-about-title">Swaram Music Player</h4>
+                <p class="settings-about-sub">Version 3.4 • Spotify & JioSaavn Edition</p>
+              </div>
+            </div>
+            <p class="settings-about-desc">High-Fidelity 320 kbps Streaming • Multi-Language Indian Cinema & Global Hits • Zero Audio Advertisements • Offline PWA Support</p>
           </div>
         </div>
       </section>
@@ -1026,6 +1240,10 @@
       <button class="nav-tab" data-tab="downloads">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
         <span>Downloads</span>
+      </button>
+      <button class="nav-tab" data-tab="settings" id="mobile-nav-settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <span>Settings</span>
       </button>
     </nav>
 
@@ -1514,6 +1732,96 @@
       </div>
     </div>
 
+    <!-- ================= FIRST-TIME LANGUAGE ONBOARDING MODAL ================= -->
+    <div id="language-onboarding-modal" class="modal-overlay hidden">
+      <div class="modal-box onboarding-modal-box">
+        <div class="onboarding-modal-header">
+          <div class="onboarding-badge">WELCOME TO SWARAM</div>
+          <h2 class="onboarding-title">What music do you love?</h2>
+          <p class="onboarding-subtitle">Choose one or more languages. We will personalize your home feed, trending charts, and music recommendations.</p>
+        </div>
+
+        <div class="onboarding-quick-actions">
+          <button type="button" id="onboarding-select-all-btn" class="onboarding-link-btn">Select All</button>
+          <span class="dot-sep">•</span>
+          <button type="button" id="onboarding-clear-all-btn" class="onboarding-link-btn">Clear All</button>
+        </div>
+
+        <div class="onboarding-lang-grid" id="onboarding-lang-grid">
+          <div class="onboarding-lang-card selected" data-lang="telugu">
+            <div class="lang-check-icon">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="9 16.2 4.8 12 3.4 13.4 9 19 21 7 19.6 5.6 9 16.2"/></svg>
+            </div>
+            <div class="lang-native-script">తెలుగు</div>
+            <div class="lang-english-name">Telugu</div>
+            <div class="lang-region-name">Tollywood</div>
+          </div>
+
+          <div class="onboarding-lang-card selected" data-lang="hindi">
+            <div class="lang-check-icon">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="9 16.2 4.8 12 3.4 13.4 9 19 21 7 19.6 5.6 9 16.2"/></svg>
+            </div>
+            <div class="lang-native-script">हिंदी</div>
+            <div class="lang-english-name">Hindi</div>
+            <div class="lang-region-name">Bollywood</div>
+          </div>
+
+          <div class="onboarding-lang-card" data-lang="tamil">
+            <div class="lang-check-icon">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="9 16.2 4.8 12 3.4 13.4 9 19 21 7 19.6 5.6 9 16.2"/></svg>
+            </div>
+            <div class="lang-native-script">தமிழ்</div>
+            <div class="lang-english-name">Tamil</div>
+            <div class="lang-region-name">Kollywood</div>
+          </div>
+
+          <div class="onboarding-lang-card" data-lang="kannada">
+            <div class="lang-check-icon">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="9 16.2 4.8 12 3.4 13.4 9 19 21 7 19.6 5.6 9 16.2"/></svg>
+            </div>
+            <div class="lang-native-script">ಕನ್ನಡ</div>
+            <div class="lang-english-name">Kannada</div>
+            <div class="lang-region-name">Sandalwood</div>
+          </div>
+
+          <div class="onboarding-lang-card" data-lang="malayalam">
+            <div class="lang-check-icon">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="9 16.2 4.8 12 3.4 13.4 9 19 21 7 19.6 5.6 9 16.2"/></svg>
+            </div>
+            <div class="lang-native-script">മലയാളം</div>
+            <div class="lang-english-name">Malayalam</div>
+            <div class="lang-region-name">Mollywood</div>
+          </div>
+
+          <div class="onboarding-lang-card" data-lang="punjabi">
+            <div class="lang-check-icon">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="9 16.2 4.8 12 3.4 13.4 9 19 21 7 19.6 5.6 9 16.2"/></svg>
+            </div>
+            <div class="lang-native-script">ਪੰਜਾਬੀ</div>
+            <div class="lang-english-name">Punjabi</div>
+            <div class="lang-region-name">Punjabi Pop</div>
+          </div>
+
+          <div class="onboarding-lang-card" data-lang="english">
+            <div class="lang-check-icon">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="9 16.2 4.8 12 3.4 13.4 9 19 21 7 19.6 5.6 9 16.2"/></svg>
+            </div>
+            <div class="lang-native-script">English</div>
+            <div class="lang-english-name">English</div>
+            <div class="lang-region-name">Global Pop</div>
+          </div>
+        </div>
+
+        <div class="onboarding-footer">
+          <div class="onboarding-footer-text" id="onboarding-selected-summary">2 languages selected</div>
+          <button type="button" id="onboarding-submit-btn" class="btn btn-primary onboarding-submit-btn">
+            <span>Continue</span>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Hidden Native Audio Element -->
     <audio id="native-audio" crossorigin="anonymous" preload="auto"></audio>
 
@@ -1525,6 +1833,6 @@
   <!-- YouTube IFrame API Script -->
   <script src="https://www.youtube.com/iframe_api"></script>
   <!-- Application Script -->
-  <script src="app.js?v=3.3"></script>
+  <script src="app.js?v=3.4"></script>
 </body>
 </html>

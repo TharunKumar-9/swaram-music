@@ -11,7 +11,8 @@ const state = {
   isPlaying: false,
   isMuted: false,
   volume: 0.8,
-  quality: '320', // '320' | '160' | '96'
+  quality: localStorage.getItem('swaram_audio_quality') || '320', // '320' | '160' | '96'
+  preferredLanguages: JSON.parse(localStorage.getItem('swaram_preferred_languages') || '["telugu"]'),
   repeatMode: 'all', // 'off' | 'all' | 'one'
   isShuffled: false,
   originalQueue: [],
@@ -2571,7 +2572,7 @@ document.addEventListener('click', (e) => {
 function switchTab(tabId) {
   state.activeTab = tabId;
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.getAttribute('data-tab') === tabId));
-  tabViews.forEach(v => v.classList.toggle('active', v.id === `view-${tabId}`));
+  document.querySelectorAll('.tab-view').forEach(v => v.classList.toggle('active', v.id === `view-${tabId}`));
   window.scrollTo({ top: 0, behavior: 'smooth' });
   const mainEl = document.querySelector('.spotify-main');
   if (mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2592,6 +2593,8 @@ function switchTab(tabId) {
     updateHistoryUI();
   } else if (tabId === 'history') {
     renderHistoryView();
+  } else if (tabId === 'settings') {
+    renderSettingsView();
   }
   updateSidebarLibraryUI();
 }
@@ -2669,6 +2672,370 @@ function resetSleepTimer() {
   state.sleepTimerTimeout = null;
   state.sleepTimerEndTrack = false;
   sleepTimerLabel.textContent = 'Timer';
+}
+
+// ==========================================================================
+// --- Language Onboarding & Settings Engine ---
+// ==========================================================================
+
+const LANG_MAP = [
+  { id: 'telugu', script: 'తెలుగు', name: 'Telugu', region: 'Tollywood' },
+  { id: 'hindi', script: 'हिंदी', name: 'Hindi', region: 'Bollywood' },
+  { id: 'tamil', script: 'தமிழ்', name: 'Tamil', region: 'Kollywood' },
+  { id: 'kannada', script: 'ಕನ್ನಡ', name: 'Kannada', region: 'Sandalwood' },
+  { id: 'malayalam', script: 'മലയാളം', name: 'Malayalam', region: 'Mollywood' },
+  { id: 'punjabi', script: 'ਪੰਜਾਬੀ', name: 'Punjabi', region: 'Punjabi Pop' },
+  { id: 'english', script: 'English', name: 'English', region: 'Global Pop' }
+];
+
+function getPreferredLanguages() {
+  try {
+    const raw = localStorage.getItem('swaram_preferred_languages');
+    if (raw) {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr) && arr.length > 0) return arr;
+    }
+  } catch (e) {}
+  return ['telugu'];
+}
+
+function savePreferredLanguages(langs) {
+  if (!Array.isArray(langs) || langs.length === 0) langs = ['telugu'];
+  state.preferredLanguages = langs;
+  localStorage.setItem('swaram_preferred_languages', JSON.stringify(langs));
+}
+
+function reorderHomeShelves(preferred) {
+  const homeView = document.getElementById('view-home');
+  if (!homeView) return;
+
+  const shelves = Array.from(homeView.querySelectorAll('.section-container[data-lang-shelf]'));
+  if (shelves.length === 0) return;
+
+  shelves.sort((a, b) => {
+    const langA = a.getAttribute('data-lang-shelf');
+    const langB = b.getAttribute('data-lang-shelf');
+    const idxA = preferred.indexOf(langA);
+    const idxB = preferred.indexOf(langB);
+
+    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+    if (idxA !== -1) return -1;
+    if (idxB !== -1) return 1;
+    return 0;
+  });
+
+  const trendingContainer = document.getElementById('trending-carousel')?.closest('.section-container');
+  if (trendingContainer && trendingContainer.parentNode) {
+    let nextNode = trendingContainer.nextSibling;
+    shelves.forEach(shelf => {
+      trendingContainer.parentNode.insertBefore(shelf, nextNode);
+      nextNode = shelf.nextSibling;
+    });
+  }
+}
+
+function applyLanguagePreferences() {
+  const preferred = getPreferredLanguages();
+  state.preferredLanguages = preferred;
+
+  // 1. Re-order Home feed shelves so preferred languages are shown right at the top
+  reorderHomeShelves(preferred);
+
+  // 2. Set default active trending to user's first preference
+  const primaryLang = preferred[0] || 'telugu';
+  if (state.currentLanguage !== primaryLang) {
+    loadTrending(primaryLang);
+  }
+
+  // 3. Update Settings view if open
+  updateSettingsLanguageSummary();
+}
+
+function checkLanguageOnboarding() {
+  const done = localStorage.getItem('swaram_lang_onboarding_done');
+  if (!done) {
+    // First time opening the app - prompt user
+    openLanguageOnboardingModal();
+  } else {
+    applyLanguagePreferences();
+  }
+}
+
+function openLanguageOnboardingModal() {
+  const modal = document.getElementById('language-onboarding-modal');
+  if (!modal) return;
+
+  const preferred = getPreferredLanguages();
+  const cards = modal.querySelectorAll('.onboarding-lang-card');
+  cards.forEach(c => {
+    const lang = c.getAttribute('data-lang');
+    c.classList.toggle('selected', preferred.includes(lang));
+  });
+
+  updateOnboardingSummary();
+  modal.classList.remove('hidden');
+}
+
+function closeLanguageOnboardingModal() {
+  const modal = document.getElementById('language-onboarding-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function updateOnboardingSummary() {
+  const modal = document.getElementById('language-onboarding-modal');
+  if (!modal) return;
+  const selectedCards = modal.querySelectorAll('.onboarding-lang-card.selected');
+  const count = selectedCards.length;
+  const summaryEl = document.getElementById('onboarding-selected-summary');
+  const submitBtn = document.getElementById('onboarding-submit-btn');
+
+  if (summaryEl) {
+    summaryEl.textContent = count === 0
+      ? 'Select at least 1 language to continue'
+      : `${count} language${count === 1 ? '' : 's'} selected`;
+  }
+
+  if (submitBtn) {
+    submitBtn.style.opacity = count === 0 ? '0.5' : '1';
+    submitBtn.style.pointerEvents = count === 0 ? 'none' : 'auto';
+  }
+}
+
+function initOnboardingListeners() {
+  const modal = document.getElementById('language-onboarding-modal');
+  if (!modal) return;
+
+  modal.querySelectorAll('.onboarding-lang-card').forEach(card => {
+    card.addEventListener('click', () => {
+      card.classList.toggle('selected');
+      updateOnboardingSummary();
+    });
+  });
+
+  document.getElementById('onboarding-select-all-btn')?.addEventListener('click', () => {
+    modal.querySelectorAll('.onboarding-lang-card').forEach(c => c.classList.add('selected'));
+    updateOnboardingSummary();
+  });
+
+  document.getElementById('onboarding-clear-all-btn')?.addEventListener('click', () => {
+    modal.querySelectorAll('.onboarding-lang-card').forEach(c => c.classList.remove('selected'));
+    updateOnboardingSummary();
+  });
+
+  document.getElementById('onboarding-submit-btn')?.addEventListener('click', () => {
+    const selected = [];
+    modal.querySelectorAll('.onboarding-lang-card.selected').forEach(c => {
+      const l = c.getAttribute('data-lang');
+      if (l) selected.push(l);
+    });
+
+    if (selected.length === 0) {
+      showToast('Please select at least 1 language');
+      return;
+    }
+
+    savePreferredLanguages(selected);
+    localStorage.setItem('swaram_lang_onboarding_done', 'true');
+    closeLanguageOnboardingModal();
+    applyLanguagePreferences();
+
+    const langNames = selected.map(l => {
+      const m = LANG_MAP.find(x => x.id === l);
+      return m ? m.name : l;
+    }).join(', ');
+    showToast(`Personalized for ${langNames}!`);
+  });
+}
+
+// --- Settings Tab View Controller ---
+function renderSettingsView() {
+  renderSettingsLanguages();
+  syncSettingsQualityUI();
+  syncSettingsThemeUI();
+  syncSettingsProfileUI();
+}
+
+function renderSettingsLanguages() {
+  const grid = document.getElementById('settings-lang-grid');
+  if (!grid) return;
+
+  const preferred = getPreferredLanguages();
+  grid.innerHTML = '';
+
+  LANG_MAP.forEach(lang => {
+    const card = document.createElement('div');
+    card.className = `onboarding-lang-card ${preferred.includes(lang.id) ? 'selected' : ''}`;
+    card.setAttribute('data-lang', lang.id);
+    card.innerHTML = `
+      <div class="lang-check-icon">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="9 16.2 4.8 12 3.4 13.4 9 19 21 7 19.6 5.6 9 16.2"/></svg>
+      </div>
+      <div class="lang-native-script">${lang.script}</div>
+      <div class="lang-english-name">${lang.name}</div>
+      <div class="lang-region-name">${lang.region}</div>
+    `;
+
+    card.addEventListener('click', () => {
+      card.classList.toggle('selected');
+      const curSelected = [];
+      grid.querySelectorAll('.onboarding-lang-card.selected').forEach(c => {
+        const l = c.getAttribute('data-lang');
+        if (l) curSelected.push(l);
+      });
+      if (curSelected.length === 0) {
+        card.classList.add('selected');
+        showToast('At least 1 language must remain selected');
+        return;
+      }
+      savePreferredLanguages(curSelected);
+      applyLanguagePreferences();
+      updateSettingsLanguageSummary();
+    });
+
+    grid.appendChild(card);
+  });
+
+  updateSettingsLanguageSummary();
+}
+
+function updateSettingsLanguageSummary() {
+  const summaryEl = document.getElementById('settings-lang-summary');
+  if (!summaryEl) return;
+  const preferred = getPreferredLanguages();
+  const names = preferred.map(l => {
+    const m = LANG_MAP.find(x => x.id === l);
+    return m ? m.name : l;
+  }).join(', ');
+  summaryEl.textContent = `Preferred: ${names || 'None'}`;
+}
+
+function syncSettingsQualityUI() {
+  const curQ = state.quality || '320';
+  document.querySelectorAll('#settings-quality-list .quality-radio-tile').forEach(tile => {
+    const q = tile.getAttribute('data-quality');
+    tile.classList.toggle('active', q === curQ);
+  });
+}
+
+function syncSettingsThemeUI() {
+  const curTheme = localStorage.getItem('swaram_theme') || 'amoled';
+  document.querySelectorAll('#settings-theme-chips .settings-theme-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-theme') === curTheme);
+  });
+}
+
+function syncSettingsProfileUI() {
+  const profileNameEl = document.getElementById('settings-profile-name');
+  const profileAvatarEl = document.getElementById('settings-profile-avatar');
+  const profileStatusEl = document.getElementById('settings-profile-status');
+
+  if (typeof AccountManager !== 'undefined' && AccountManager.activeAccount) {
+    if (profileNameEl) profileNameEl.textContent = AccountManager.activeAccount.name || 'My Profile';
+    if (profileAvatarEl) profileAvatarEl.textContent = AccountManager.activeAccount.avatar || '🎧';
+    if (profileStatusEl) {
+      profileStatusEl.textContent = AccountManager.activeAccount.hasPin || AccountManager.activeAccount.pin
+        ? 'PIN Lock Protected'
+        : 'Open Profile (No PIN)';
+    }
+  }
+}
+
+function initSettingsListeners() {
+  // Quality options click
+  document.querySelectorAll('#settings-quality-list .quality-radio-tile').forEach(tile => {
+    tile.addEventListener('click', () => {
+      const q = tile.getAttribute('data-quality');
+      if (!q) return;
+      state.quality = q;
+      localStorage.setItem('swaram_audio_quality', q);
+      if (qualitySelect) qualitySelect.value = q;
+      if (qualityBadge) qualityBadge.textContent = `HQ ${q}k`;
+      syncSettingsQualityUI();
+
+      if (state.currentSong) {
+        const curTime = audio.currentTime;
+        const wasPlaying = state.isPlaying;
+        const rawUrl = getAudioUrl(state.currentSong);
+        audio.src = `/api/stream?url=${encodeURIComponent(rawUrl)}`;
+        audio.currentTime = curTime;
+        if (wasPlaying) audio.play().catch(() => {});
+      }
+      showToast(`Audio streaming quality set to ${q} kbps`);
+    });
+  });
+
+  // Theme chips click
+  document.querySelectorAll('#settings-theme-chips .settings-theme-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const t = btn.getAttribute('data-theme');
+      if (t) {
+        applyTheme(t);
+        syncSettingsThemeUI();
+        if (typeof AccountManager !== 'undefined' && AccountManager.activeAccount) {
+          AccountManager.activeAccount.theme = t;
+          AccountManager.syncActiveData();
+        }
+        showToast(`Theme changed`);
+      }
+    });
+  });
+
+  // Settings Save Lang button
+  document.getElementById('settings-save-lang-btn')?.addEventListener('click', () => {
+    const selected = [];
+    document.querySelectorAll('#settings-lang-grid .onboarding-lang-card.selected').forEach(c => {
+      const l = c.getAttribute('data-lang');
+      if (l) selected.push(l);
+    });
+    if (selected.length === 0) {
+      showToast('Select at least 1 language');
+      return;
+    }
+    savePreferredLanguages(selected);
+    applyLanguagePreferences();
+    showToast('Feed updated with preferred languages!');
+    switchTab('home');
+  });
+
+  // Re-run onboarding full screen
+  document.getElementById('settings-open-onboarding-btn')?.addEventListener('click', openLanguageOnboardingModal);
+  document.getElementById('settings-reset-onboarding-btn')?.addEventListener('click', () => {
+    localStorage.removeItem('swaram_lang_onboarding_done');
+    openLanguageOnboardingModal();
+  });
+
+  // Manage PIN button
+  document.getElementById('settings-manage-pin-btn')?.addEventListener('click', () => {
+    if (typeof AccountManager !== 'undefined') {
+      AccountManager.openManagePinModal();
+    }
+  });
+
+  // Switch profile button
+  document.getElementById('settings-switch-account-btn')?.addEventListener('click', () => {
+    if (typeof AccountManager !== 'undefined') {
+      AccountManager.openAccountModal();
+    }
+  });
+
+  // View offline downloads
+  document.getElementById('settings-view-downloads-btn')?.addEventListener('click', () => {
+    switchTab('downloads');
+  });
+
+  // Clear history button
+  document.getElementById('settings-clear-history-btn')?.addEventListener('click', () => {
+    if (confirm('Clear your listening history?')) {
+      state.history = [];
+      localStorage.setItem('swaram_history', '[]');
+      updateHistoryUI();
+      if (typeof AccountManager !== 'undefined' && AccountManager.activeAccount) {
+        AccountManager.activeAccount.history = [];
+        AccountManager.syncActiveData();
+      }
+      showToast('Listening history cleared');
+    }
+  });
 }
 
 // --- History Management (Strictly Last 20 Played Songs) ---
@@ -3118,6 +3485,7 @@ async function loadCarousels() {
     { cat: 'sandalwood_hits', containerId: 'sandalwood-carousel' },
     { cat: 'mollywood_hits', containerId: 'mollywood-carousel' },
     { cat: 'punjabi_hits', containerId: 'punjabi-carousel' },
+    { cat: 'english_hits', containerId: 'english-carousel' },
     { cat: 'anirudh', containerId: 'anirudh-carousel' },
     { cat: 'thaman', containerId: 'thaman-carousel' },
     { cat: 'sai_abhyankkar', containerId: 'sai-carousel' },
@@ -3177,6 +3545,9 @@ async function loadCarousels() {
       });
     }
   }
+
+  // Personalize shelf order according to preferred languages
+  reorderHomeShelves(getPreferredLanguages());
 }
 
 // 3. Category & Mood Pills (Industries + Song Types + Singers)
@@ -3188,9 +3559,10 @@ async function loadCategories() {
   const indChipsBar = document.getElementById('industry-chips');
   if (indChipsBar && res.industries) {
     indChipsBar.innerHTML = '';
-    res.industries.forEach((ind, idx) => {
+    const activeLang = state.currentLanguage || (state.preferredLanguages?.[0] || 'all');
+    res.industries.forEach((ind) => {
       const chip = document.createElement('button');
-      chip.className = `category-chip ${idx === 0 ? 'active' : ''}`;
+      chip.className = `category-chip ${ind.id === activeLang ? 'active' : ''}`;
       chip.setAttribute('data-lang', ind.id);
       chip.innerHTML = `<span>${ind.title}</span>`;
       chip.addEventListener('click', () => {
@@ -3841,7 +4213,7 @@ function initApp() {
   if ('caches' in window) {
     caches.keys().then(keys => {
       keys.forEach(k => {
-        if (k !== 'swaram-v6') caches.delete(k);
+        if (k !== 'swaram-v12') caches.delete(k);
       });
     }).catch(() => {});
   }
@@ -3863,13 +4235,21 @@ function initApp() {
   updateSidebarLibraryUI();
   updateNavArrowsState();
 
+  // Language Preferences & Settings Setup
+  initOnboardingListeners();
+  initSettingsListeners();
+  checkLanguageOnboarding();
+
   // Async storage & data catalog loading
   OfflineDB.init().then(() => {
     updateDownloadsCountBadge();
   }).catch(() => {});
 
   loadCategories();
-  loadTrending();
+  // If onboarding is already completed, applyLanguagePreferences already triggers loadTrending with user's preferred language
+  if (!localStorage.getItem('swaram_lang_onboarding_done')) {
+    loadTrending();
+  }
   loadCarousels();
   loadArtists();
   loadAlbums();
