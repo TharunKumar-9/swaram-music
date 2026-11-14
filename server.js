@@ -466,6 +466,111 @@ async function getTrendingSongs(industry = 'all') {
   return cachedTrendingByIndustry[indKey] || [];
 }
 
+// --- Trending Albums Catalog by Every Industry & Trend ---
+const TRENDING_ALBUM_QUERIES = {
+  all: [
+    'Pushpa 2 The Rule Telugu', 'Stree 2 Hindi', 'Devara Part 1 Telugu', 'Leo Tamil',
+    'Animal Hindi', 'KGF Chapter 2 Kannada', 'Aavesham Malayalam', 'Kalki 2898 AD Telugu',
+    'Making Memories Karan Aujla', 'After Hours The Weeknd', 'Bhool Bhulaiyaa 3 Hindi', 'Amaran Tamil',
+    'Kantara Kannada', 'Ghost Diljit Dosanjh', 'Manjummel Boys Malayalam', 'Purpose Justin Bieber'
+  ],
+  telugu: [
+    'Pushpa 2 The Rule Telugu', 'Devara Part 1 Telugu', 'Kalki 2898 AD Telugu', 'Guntur Kaaram Telugu',
+    'Salaar Telugu', 'RRR Telugu', 'HanuMan Telugu', 'Ala Vaikunthapurramuloo Telugu',
+    'Saripodhaa Sanivaaram Telugu', 'Lucky Baskhar Telugu', 'Hi Nanna Telugu', 'Sita Ramam Telugu'
+  ],
+  hindi: [
+    'Stree 2 Hindi', 'Animal Hindi', 'Jawan Hindi', 'Bhool Bhulaiyaa 3 Hindi',
+    'Bad Newz Hindi', 'Dunki Hindi', 'Brahmastra Hindi', 'Kabir Singh Hindi',
+    'Rocky Aur Rani Kii Prem Kahaani', 'Fighter Hindi', 'Pathaan Hindi', 'Yeh Jawaani Hai Deewani'
+  ],
+  tamil: [
+    'Leo Tamil', 'Jailer Tamil', 'Amaran Tamil', 'The Greatest Of All Time Tamil',
+    'Vikram Tamil', 'Master Tamil', 'Ponniyin Selvan Tamil', 'Raayan Tamil',
+    'Vettaiyan Tamil', 'Captain Miller Tamil', 'Thiruchitrambalam Tamil', 'Kaithi Tamil'
+  ],
+  kannada: [
+    'KGF Chapter 2 Kannada', 'Kantara Kannada', 'Martin Kannada', 'Bagheera Kannada',
+    '777 Charlie Kannada', 'Vikrant Rona Kannada', 'Krishnam Pranaya Sakhi', 'KGF Chapter 1 Kannada',
+    'Roberrt Kannada', 'Yuva Kannada'
+  ],
+  malayalam: [
+    'Aavesham Malayalam', 'Manjummel Boys Malayalam', 'Premalu Malayalam', 'ARM Malayalam',
+    'RDX Malayalam', 'Bramayugam Malayalam', 'Turbo Malayalam', 'Romancham Malayalam',
+    'Hridayam Malayalam', 'Minnal Murali Malayalam'
+  ],
+  punjabi: [
+    'Making Memories Karan Aujla', 'Ghost Diljit Dosanjh', 'Four Me Karan Aujla',
+    'Two Hearts Never Break The Same AP Dhillon', 'Still Rollin Shubh', 'Moosetape Sidhu Moose Wala',
+    'MoonChild Era Diljit Dosanjh', 'Way Ahead Karan Aujla'
+  ],
+  english: [
+    'After Hours The Weeknd', 'Purpose Justin Bieber', 'Starboy The Weeknd', 'Equals Ed Sheeran',
+    'Hit Me Hard and Soft Billie Eilish', 'Short n Sweet Sabrina Carpenter', '1989 Taylor Swift',
+    'Future Nostalgia Dua Lipa', 'Divide Ed Sheeran', 'Fine Line Harry Styles'
+  ]
+};
+
+const cachedTrendingAlbums = {};
+const lastTrendingAlbumsFetch = {};
+
+async function getTrendingAlbums(industry = 'all') {
+  const indKey = TRENDING_ALBUM_QUERIES[industry] ? industry : 'all';
+  const now = Date.now();
+  if (cachedTrendingAlbums[indKey] && now - (lastTrendingAlbumsFetch[indKey] || 0) < 1000 * 60 * 30) {
+    return cachedTrendingAlbums[indKey];
+  }
+
+  const queries = TRENDING_ALBUM_QUERIES[indKey] || TRENDING_ALBUM_QUERIES.all;
+  const albumList = [];
+  const seenIds = new Set();
+  const seenTitles = new Set();
+
+  for (const q of queries) {
+    try {
+      const data = await fetchSaavn(`__call=search.getAlbumResults&p=1&n=4&q=${encodeURIComponent(q)}`);
+      if (data && data.results) {
+        for (const item of data.results) {
+          if (!item.id || seenIds.has(item.id)) continue;
+          const rawTitle = unescapeHtml(item.title || item.name || '');
+          const cleanTitle = rawTitle.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 16);
+          if (seenTitles.has(cleanTitle)) continue;
+
+          // Reject remix / compilation / lofi albums
+          if (REMIX_KEYWORDS_REGEX.test(rawTitle) || REMIX_KEYWORDS_REGEX.test(item.subtitle || '')) {
+            continue;
+          }
+
+          let img = (item.image || '').replace('150x150.jpg', '500x500.jpg').replace('50x50.jpg', '500x500.jpg');
+          if (img.startsWith('http://')) img = img.replace('http://', 'https://');
+
+          seenIds.add(item.id);
+          seenTitles.add(cleanTitle);
+
+          albumList.push({
+            id: item.id,
+            title: rawTitle,
+            artist: unescapeHtml(item.subtitle || item.primary_artists || 'Indian Cinema'),
+            image: img,
+            year: item.year || '2024',
+            song_count: item.song_count || item.more_info?.song_count || 'OST',
+            industry: indKey
+          });
+          break; // Take the authentic top album for this query
+        }
+      }
+    } catch (err) {
+      console.warn('Trending album fetch error:', err.message);
+    }
+  }
+
+  if (albumList.length > 0) {
+    cachedTrendingAlbums[indKey] = albumList;
+    lastTrendingAlbumsFetch[indKey] = now;
+  }
+  return cachedTrendingAlbums[indKey] || [];
+}
+
 // Pre-fill categories, moods, and singer collections
 const MOODS = [
   { id: 'melody', title: 'Melody', desc: 'Soulful & calming melodies across languages', icon: '', queries: ['Telugu Melody Hits', 'Arijit Singh Melodies', 'Anirudh Melodies Tamil', 'Singara Siriye'] },
@@ -981,6 +1086,15 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // 7b. Albums list by industry / trend
+  if (pathname === '/api/albums') {
+    const industry = (parsedUrl.query.industry || 'all').toLowerCase();
+    const albums = await getTrendingAlbums(industry);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: true, industry, albums }));
+    return;
+  }
+
   // 8. Album details
   if (pathname === '/api/album') {
     const albumId = parsedUrl.query.id;
@@ -995,14 +1109,21 @@ const server = http.createServer(async (req, res) => {
       res.end(JSON.stringify({ success: false, error: 'Album not found' }));
       return;
     }
-    const songs = (data.list || []).map(formatSong).filter(s => s && s.audio_320);
+    let rawSongs = (data.list || []).map(formatSong).filter(s => s && s.audio_320);
+
+    // If album has remix or lofi duplicates, filter them so original songs shine
+    if (rawSongs.length > 2) {
+      const filteredSongs = rawSongs.filter(s => !REMIX_KEYWORDS_REGEX.test(s.title));
+      if (filteredSongs.length > 0) rawSongs = filteredSongs;
+    }
+
     const album = {
       id: data.id,
       title: unescapeHtml(data.title || data.name),
-      subtitle: unescapeHtml(data.subtitle || data.primary_artists || 'Tollywood'),
-      image: (data.image || '').replace('150x150.jpg', '500x500.jpg'),
+      subtitle: unescapeHtml(data.subtitle || data.primary_artists || 'Indian Cinema'),
+      image: (data.image || '').replace('150x150.jpg', '500x500.jpg').replace('50x50.jpg', '500x500.jpg'),
       year: data.year || '2024',
-      songs
+      songs: rawSongs
     };
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ success: true, album }));

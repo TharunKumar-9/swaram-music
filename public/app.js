@@ -2595,6 +2595,9 @@ function switchTab(tabId) {
     renderHistoryView();
   } else if (tabId === 'settings') {
     renderSettingsView();
+  } else if (tabId === 'albums') {
+    const preferred = getPreferredLanguages();
+    loadAlbums(preferred[0] || 'all');
   }
   updateSidebarLibraryUI();
 }
@@ -2749,6 +2752,9 @@ function applyLanguagePreferences() {
 
   // 3. Update Settings view if open
   updateSettingsLanguageSummary();
+
+  // 4. Update Trending Blockbuster Albums according to user's preferred trend
+  renderHomeAlbumsCarousel();
 }
 
 function checkLanguageOnboarding() {
@@ -3667,57 +3673,157 @@ async function loadArtists() {
 }
 
 // 5. Blockbuster Albums Grid (Bollywood, Kollywood, Sandalwood, Tollywood, Mollywood)
-async function loadAlbums() {
-  const albumsList = [
-    // Bollywood Hits
-    { title: 'Stree 2', artist: 'Sachin-Jigar • Bollywood', query: 'Stree 2 Songs', img: 'https://c.saavncdn.com/264/Stree-2-Hindi-2024-20240816132454-500x500.jpg' },
-    { title: 'Animal', artist: 'Pritam, Harshavardhan • Bollywood', query: 'Animal Hindi Songs', img: 'https://c.saavncdn.com/092/Animal-Hindi-2023-20231124191036-500x500.jpg' },
-    { title: 'Jawan', artist: 'Anirudh Ravichander • Bollywood', query: 'Jawan Hindi Songs', img: 'https://c.saavncdn.com/026/Jawan-Hindi-2023-20230905183856-500x500.jpg' },
+// Cache of albums per trend on client
+const clientAlbumsCache = {};
 
-    // Kollywood Hits
-    { title: 'Leo', artist: 'Anirudh Ravichander • Kollywood', query: 'Leo Tamil Songs', img: 'https://c.saavncdn.com/022/Leo-Tamil-2023-20231019183856-500x500.jpg' },
-    { title: 'Jailer', artist: 'Anirudh Ravichander • Kollywood', query: 'Jailer Tamil Songs', img: 'https://c.saavncdn.com/791/Jailer-Tamil-2023-20230728183856-500x500.jpg' },
-
-    // Sandalwood Hits
-    { title: 'K.G.F: Chapter 2', artist: 'Ravi Basrur • Sandalwood', query: 'KGF Chapter 2 Kannada', img: 'https://c.saavncdn.com/391/KGF-Chapter-2-Kannada-2022-20220414183856-500x500.jpg' },
-    { title: 'Kantara', artist: 'B. Ajaneesh Loknath • Sandalwood', query: 'Kantara Songs Kannada', img: 'https://c.saavncdn.com/832/Kantara-Kannada-2022-20221008183856-500x500.jpg' },
-
-    // Mollywood Hits
-    { title: 'Aavesham', artist: 'Sushin Shyam • Mollywood', query: 'Aavesham Malayalam Songs', img: 'https://c.saavncdn.com/045/Aavesham-Malayalam-2024-20240410183856-500x500.jpg' },
-    { title: 'Manjummel Boys', artist: 'Sushin Shyam • Mollywood', query: 'Manjummel Boys Malayalam', img: 'https://c.saavncdn.com/561/Manjummel-Boys-Malayalam-2024-20240214183856-500x500.jpg' },
-
-    // Tollywood Hits
-    { title: 'Pushpa 2: The Rule', artist: 'Devi Sri Prasad (DSP) • Tollywood', query: 'Pushpa 2 The Rule Telugu', img: 'https://c.saavncdn.com/366/Pushpa-2-The-Rule-Telugu-Telugu-2024-20241205211012-500x500.jpg' },
-    { title: 'Devara: Part 1', artist: 'Anirudh Ravichander • Tollywood', query: 'Devara Telugu Songs', img: 'https://c.saavncdn.com/979/Devara-Part-1-Telugu-Telugu-2024-20240927063116-500x500.jpg' },
-    { title: 'Kalki 2898 AD', artist: 'Santhosh Narayanan • Pan-India', query: 'Kalki 2898 AD Telugu', img: 'https://c.saavncdn.com/392/Kalki-2898-AD-Telugu-Telugu-2024-20240710174026-500x500.jpg' },
-    { title: 'RRR', artist: 'M. M. Keeravani • Pan-India', query: 'RRR Telugu Songs', img: 'https://c.saavncdn.com/001/RRR-Telugu-2021-20211209211002-500x500.jpg' },
-    { title: 'Ala Vaikunthapurramuloo', artist: 'Thaman S • Tollywood', query: 'Ala Vaikunthapurramuloo Telugu', img: 'https://c.saavncdn.com/469/Ala-Vaikunthapurramuloo-Telugu-2019-20200113110940-500x500.jpg' }
-  ];
-
+// 5. Blockbuster Albums Grid by Every Trend (Bollywood, Kollywood, Sandalwood, Tollywood, Mollywood, Punjabi, English)
+async function loadAlbums(trend = 'all') {
   const grid = document.getElementById('albums-grid');
-  grid.innerHTML = '';
+  const subtitle = document.getElementById('albums-view-subtitle');
+  if (!grid) return;
 
-  albumsList.forEach(album => {
+  // Sync trend chips
+  document.querySelectorAll('#albums-trend-chips .songs-lang-chip').forEach(c => {
+    c.classList.toggle('active', c.getAttribute('data-trend') === trend);
+  });
+
+  if (subtitle) {
+    const trendName = trend === 'all' ? 'Every Trend' : formatLanguageName(trend);
+    subtitle.textContent = `Full official soundtrack collections for ${trendName}`;
+  }
+
+  // Check client cache or fetch from /api/albums?industry=${trend}
+  let albums = clientAlbumsCache[trend];
+  if (!albums) {
+    grid.innerHTML = '<div style="padding:40px; text-align:center; color:var(--text-muted); grid-column: 1/-1;">Loading blockbuster albums...</div>';
+    const res = await fetch(`/api/albums?industry=${trend}`).then(r => r.json()).catch(() => null);
+    if (res && res.albums && res.albums.length > 0) {
+      albums = res.albums;
+      clientAlbumsCache[trend] = albums;
+    }
+  }
+
+  if (!albums || albums.length === 0) {
+    grid.innerHTML = '<div style="padding:40px; text-align:center; color:var(--text-muted); grid-column: 1/-1;">No albums found.</div>';
+    return;
+  }
+
+  grid.innerHTML = '';
+  albums.forEach(album => {
     const card = document.createElement('div');
     card.className = 'music-card';
     card.innerHTML = `
       <div class="card-art-wrap">
-        <img src="${album.img}" alt="${album.title}" class="card-art" loading="lazy" onerror="this.src='https://c.saavncdn.com/366/Pushpa-2-The-Rule-Telugu-Telugu-2024-20241205211012-500x500.jpg'">
-        <button class="card-play-btn" title="Play Album">
+        <img src="${album.image}" alt="${album.title}" class="card-art" loading="lazy" onerror="this.src='https://c.saavncdn.com/366/Pushpa-2-The-Rule-Telugu-Telugu-2024-20241205211012-500x500.jpg'">
+        <button class="card-play-btn" title="Play Full Album">
           <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
         </button>
       </div>
       <div class="card-title">${album.title}</div>
-      <div class="card-subtitle">${album.artist}</div>
+      <div class="card-subtitle">${album.artist} • ${album.song_count} songs</div>
     `;
 
-    card.addEventListener('click', () => openSearchDetail(album.query, album.title, album.img));
+    card.addEventListener('click', () => {
+      openAlbumDetail(album.id, album.title, album.image, album.artist);
+    });
+
+    const playBtn = card.querySelector('.card-play-btn');
+    playBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      showToast(`Loading album "${album.title}"...`);
+      const res = await fetch(`/api/album?id=${album.id}`).then(r => r.json()).catch(() => null);
+      if (res && res.album && res.album.songs && res.album.songs.length > 0) {
+        playSong(res.album.songs[0], res.album.songs, 0);
+      }
+    });
+
     grid.appendChild(card);
   });
   updateSidebarLibraryUI();
 }
 
-// 6. Open Category or Search Detail View
+// Render Home Albums Carousel
+async function renderHomeAlbumsCarousel() {
+  const container = document.getElementById('home-albums-carousel');
+  if (!container) return;
+
+  const preferred = getPreferredLanguages();
+  const primaryLang = preferred[0] || 'all';
+
+  const res = await fetch(`/api/albums?industry=${primaryLang}`).then(r => r.json()).catch(() => null);
+  if (!res || !res.albums) return;
+
+  container.innerHTML = '';
+  res.albums.slice(0, 10).forEach(album => {
+    const card = document.createElement('div');
+    card.className = 'music-card';
+    card.innerHTML = `
+      <div class="card-art-wrap">
+        <img src="${album.image}" alt="${album.title}" class="card-art" loading="lazy" onerror="this.src='https://c.saavncdn.com/366/Pushpa-2-The-Rule-Telugu-Telugu-2024-20241205211012-500x500.jpg'">
+        <button class="card-play-btn" title="Play Full Album">
+          <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        </button>
+      </div>
+      <div class="card-title">${album.title}</div>
+      <div class="card-subtitle">${album.artist} • ${album.song_count} songs</div>
+    `;
+
+    card.addEventListener('click', () => {
+      openAlbumDetail(album.id, album.title, album.image, album.artist);
+    });
+
+    const playBtn = card.querySelector('.card-play-btn');
+    playBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const albRes = await fetch(`/api/album?id=${album.id}`).then(r => r.json()).catch(() => null);
+      if (albRes && albRes.album && albRes.album.songs && albRes.album.songs.length > 0) {
+        playSong(albRes.album.songs[0], albRes.album.songs, 0);
+      }
+    });
+
+    container.appendChild(card);
+  });
+}
+
+// 6. Open Category, Artist, or Official Album Detail View
+async function openAlbumDetail(albumId, fallbackTitle, fallbackCover, fallbackSubtitle) {
+  if (!albumId) {
+    if (fallbackTitle) return openAlbumByTitle(fallbackTitle, fallbackCover);
+    return;
+  }
+  showToast('Opening album...');
+  const res = await fetch(`/api/album?id=${encodeURIComponent(albumId)}`).then(r => r.json()).catch(() => null);
+  if (!res || !res.album || !res.album.songs || res.album.songs.length === 0) {
+    showToast('Album tracklist not available');
+    return;
+  }
+  const album = res.album;
+  const subtitle = `${album.subtitle || fallbackSubtitle || ''} • Original Motion Picture Soundtrack (${album.year || '2024'}) • ${album.songs.length} tracks`;
+  renderDetailView(
+    album.title || fallbackTitle,
+    subtitle,
+    album.image || fallbackCover,
+    album.songs,
+    false,
+    null
+  );
+}
+
+async function openAlbumByTitle(title, fallbackCover) {
+  if (!title) return;
+  showToast(`Finding album for ${title}...`);
+  const res = await fetch(`/api/search?q=${encodeURIComponent(title)}`).then(r => r.json()).catch(() => null);
+  if (res && res.albums && res.albums.length > 0) {
+    const bestAlbum = res.albums.find(a => !REMIX_KEYWORDS_REGEX.test(a.title)) || res.albums[0];
+    if (bestAlbum && bestAlbum.id) {
+      return openAlbumDetail(bestAlbum.id, bestAlbum.title, bestAlbum.image, bestAlbum.subtitle);
+    }
+  }
+  if (res && res.songs && res.songs.length > 0) {
+    renderDetailView(title, 'Original Motion Picture Soundtrack', fallbackCover || res.songs[0]?.image, res.songs);
+  }
+}
+
 async function openCategoryDetail(catId) {
   const res = await fetch(`/api/category?id=${catId}`).then(r => r.json()).catch(() => null);
   if (!res || !res.songs) return;
@@ -3832,6 +3938,10 @@ function renderDetailView(title, desc, cover, songs, isCustomPlaylist = false, p
   document.getElementById('detail-back-btn').onclick = () => {
     if (isCustomPlaylist) {
       switchTab('playlists');
+    } else if (state.activeTab === 'albums' || tabHistory[tabHistoryIndex - 1] === 'albums') {
+      switchTab('albums');
+    } else if (state.activeTab === 'search-results' || tabHistory[tabHistoryIndex - 1] === 'search-results') {
+      switchTab('search-results');
     } else {
       switchTab('home');
     }
@@ -4119,7 +4229,13 @@ globalSearch.addEventListener('input', () => {
           <div class="card-title">${album.title}</div>
           <div class="card-subtitle">${album.subtitle}</div>
         `;
-        card.addEventListener('click', () => openSearchDetail(album.title, album.title, album.image));
+        card.addEventListener('click', () => {
+          if (album.id) {
+            openAlbumDetail(album.id, album.title, album.image, album.subtitle);
+          } else {
+            openAlbumByTitle(album.title, album.image);
+          }
+        });
         searchAlbumsGrid.appendChild(card);
       });
     }
@@ -4207,13 +4323,30 @@ function initSongsLangFilter() {
   });
 }
 
+// --- Album Trend Filter Listener for Albums Tab ---
+function initAlbumTrendFilter() {
+  const container = document.getElementById('albums-trend-chips');
+  if (container) {
+    container.querySelectorAll('.songs-lang-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const trend = chip.getAttribute('data-trend') || 'all';
+        loadAlbums(trend);
+      });
+    });
+  }
+
+  document.getElementById('home-view-all-albums-btn')?.addEventListener('click', () => {
+    switchTab('albums');
+  });
+}
+
 // --- Initialization ---
 function initApp() {
   // Purge legacy service worker caches
   if ('caches' in window) {
     caches.keys().then(keys => {
       keys.forEach(k => {
-        if (k !== 'swaram-v12') caches.delete(k);
+        if (k !== 'swaram-v13') caches.delete(k);
       });
     }).catch(() => {});
   }
@@ -4224,6 +4357,7 @@ function initApp() {
   renderCustomPlaylists();
   initPlaylistEvents();
   initSongsLangFilter();
+  initAlbumTrendFilter();
   initDownloadsViewEvents();
   initNetworkListeners();
   updateHistoryUI();
@@ -4251,6 +4385,7 @@ function initApp() {
     loadTrending();
   }
   loadCarousels();
+  renderHomeAlbumsCarousel();
   loadArtists();
   loadAlbums();
   searchAndRenderYouTube('pan india top hit songs 2024');
