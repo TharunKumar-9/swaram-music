@@ -67,7 +67,7 @@ function formatLanguageName(lang) {
   return l.charAt(0).toUpperCase() + l.slice(1);
 }
 
-// Generate normalized unique song key to eliminate duplicate releases/remixes
+// Generate normalized unique song key to eliminate duplicate uploads of the same track
 function getCleanSongKey(song) {
   if (!song) return '';
   const title = (song.title || '')
@@ -77,19 +77,27 @@ function getCleanSongKey(song) {
     .replace(/&amp;/g, '&')
     .replace(/\(.*?\)/g, '')
     .replace(/\[.*?\]/g, '')
-    .replace(/telugu|hindi|tamil|kannada|malayalam|punjabi/gi, '')
+    .replace(/telugu|hindi|tamil|kannada|malayalam|punjabi|english/gi, '')
     .replace(/lyrical|audio|video|remix|lofi|reprise|version|full song|from/gi, '')
     .replace(/[^a-z0-9]/g, '')
     .trim();
-  
-  if (title.length < 3) {
-    const movie = (song.movie || '')
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, '')
-      .slice(0, 8);
-    return `${title}_${movie}`;
+
+  // Extract primary artist so different songs with the same title (e.g. "Sorry" by Justin Bieber vs "Sorry" by Alan Walker) are never collapsed
+  const artist = (song.singers || song.music || '')
+    .toLowerCase()
+    .split(/[,&/]|feat|ft\./i)[0]
+    .replace(/[^a-z0-9]/g, '')
+    .slice(0, 12);
+
+  if (artist && artist.length >= 3) {
+    return `${title}_${artist}`;
   }
-  return title;
+
+  const movie = (song.movie || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+    .slice(0, 10);
+  return `${title}_${movie}`;
 }
 
 // Strict song deduplication helper with thumbnail cover art & movie diversity protection
@@ -142,7 +150,7 @@ function scoreAndRankSongs(songs, query) {
   const isQueryAskingForRemix = REMIX_KEYWORDS_REGEX.test(q);
   const cleanQ = q.replace(/[^a-z0-9\s]/g, '').trim();
 
-  return [...songs].map(song => {
+  return [...songs].map((song, index) => {
     const title = (song.title || '').toLowerCase();
     const rawAlbum = (song.movie || song.album || '').toLowerCase();
     const music = (song.music || '').toLowerCase();
@@ -152,12 +160,15 @@ function scoreAndRankSongs(songs, query) {
 
     let score = 0;
 
-    // 1. Heavy penalty for remixes/covers/lofi/teasers when query didn't ask for them
+    // 1. Initial streaming popularity & search relevance rank from engine
+    score += Math.max(0, 150 - index * 6);
+
+    // 2. Heavy penalty for remixes/covers/lofi/teasers when query didn't ask for them
     if (isRemixOrCover && !isQueryAskingForRemix) {
       score -= 2000;
     }
 
-    // 2. Base title match without parenthetical clutter like '(From "Movie")'
+    // 3. Base title match without parenthetical clutter like '(From "Movie")'
     const baseTitle = title
       .replace(/\s*[\(\[](from|movie|film|original|audio).*?[\)\]]/gi, '')
       .replace(/[^a-z0-9\s]/g, '')
@@ -171,22 +182,17 @@ function scoreAndRankSongs(songs, query) {
       score += 150;
     }
 
-    // 3. Official movie soundtrack bonus
+    // 4. Official movie soundtrack bonus
     if (rawAlbum.includes('original motion picture soundtrack') || rawAlbum.includes('ost')) {
       score += 250;
     }
 
-    // 4. Authentic movie album bonus: if album differs from song title and isn't a remix, it's a real OST
+    // 5. Authentic movie album bonus: if album differs from song title and isn't a remix, it's a real OST
     if (rawAlbum && !rawAlbum.includes(baseTitle) && !REMIX_KEYWORDS_REGEX.test(rawAlbum)) {
       score += 150;
     }
 
-    // 5. Query matches the movie/album directly (e.g. searching "Pushpa 2" or "Brahmastra")
-    if (rawAlbum.includes(cleanQ)) {
-      score += 250;
-    }
-
-    // 6. Query matches artist or composer (e.g. "Arijit", "Anirudh", "Pritam")
+    // 6. Query matches artist or composer (e.g. "Justin Bieber", "Arijit", "Anirudh", "Pritam")
     if (singers.includes(cleanQ) || music.includes(cleanQ)) {
       score += 200;
     }
@@ -823,9 +829,9 @@ const server = http.createServer(async (req, res) => {
     // Deduplicate identical duplicate tracks (allowing multiple songs from the same movie soundtrack)
     const songs = dedupeSongs(rawSongs, null, null);
 
-    // Also fetch albums
-    const albumData = await fetchSaavn(`__call=search.getAlbumResults&p=1&n=10&q=${encodeURIComponent(searchQuery)}`);
-    const albums = (albumData?.results || []).map(a => ({
+    // Also fetch albums (filtering out remix/lofi albums unless user explicitly searched for remix)
+    const albumData = await fetchSaavn(`__call=search.getAlbumResults&p=1&n=15&q=${encodeURIComponent(searchQuery)}`);
+    let rawAlbums = (albumData?.results || []).map(a => ({
       id: a.id,
       title: unescapeHtml(a.title || a.name),
       subtitle: unescapeHtml(a.subtitle || a.artist || 'Indian Cinema'),
@@ -833,6 +839,11 @@ const server = http.createServer(async (req, res) => {
       year: a.year || '2024',
       song_count: a.more_info?.song_count || 0
     }));
+
+    if (!REMIX_KEYWORDS_REGEX.test(query)) {
+      rawAlbums = rawAlbums.filter(a => !REMIX_KEYWORDS_REGEX.test(a.title) && !REMIX_KEYWORDS_REGEX.test(a.subtitle));
+    }
+    const albums = rawAlbums.slice(0, 10);
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ success: true, query: searchQuery, songs, albums }));

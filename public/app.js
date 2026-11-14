@@ -2844,19 +2844,27 @@ function getCleanSongKey(song) {
     .replace(/&amp;/g, '&')
     .replace(/\(.*?\)/g, '')
     .replace(/\[.*?\]/g, '')
-    .replace(/telugu|hindi|tamil|kannada|malayalam|punjabi/gi, '')
+    .replace(/telugu|hindi|tamil|kannada|malayalam|punjabi|english/gi, '')
     .replace(/lyrical|audio|video|remix|lofi|reprise|version|full song|from/gi, '')
     .replace(/[^a-z0-9]/g, '')
     .trim();
-  
-  if (title.length < 3) {
-    const movie = (song.movie || '')
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, '')
-      .slice(0, 8);
-    return `${title}_${movie}`;
+
+  // Extract primary artist so different songs with the same title are never collapsed
+  const artist = (song.singers || song.music || '')
+    .toLowerCase()
+    .split(/[,&/]|feat|ft\./i)[0]
+    .replace(/[^a-z0-9]/g, '')
+    .slice(0, 12);
+
+  if (artist && artist.length >= 3) {
+    return `${title}_${artist}`;
   }
-  return title;
+
+  const movie = (song.movie || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+    .slice(0, 10);
+  return `${title}_${movie}`;
 }
 
 function getCleanImageKey(imageUrl) {
