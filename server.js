@@ -93,7 +93,7 @@ function getCleanSongKey(song) {
 }
 
 // Strict song deduplication helper with thumbnail cover art & movie diversity protection
-function dedupeSongs(songs, seenKeysSet = null, maxPerCover = 1) {
+function dedupeSongs(songs, seenKeysSet = null, maxPerCover = null) {
   const seenIds = new Set();
   const seenKeys = seenKeysSet || new Set();
   const coverCounts = new Map();
@@ -106,29 +106,105 @@ function dedupeSongs(songs, seenKeysSet = null, maxPerCover = 1) {
     const key = getCleanSongKey(song);
     if (key && seenKeys.has(key)) continue;
 
-    // Check unique thumbnail image (strip dimensions to get true album art ID)
-    const imgKey = (song.image || '')
-      .replace(/-500x500\.jpg|-150x150\.jpg|-50x50\.jpg/g, '')
-      .toLowerCase()
-      .trim();
-    const currentImgCount = coverCounts.get(imgKey) || 0;
-    if (imgKey && maxPerCover && currentImgCount >= maxPerCover) continue;
+    // Check unique thumbnail image & movie only when maxPerCover is specified (e.g. in carousels)
+    if (maxPerCover) {
+      const imgKey = (song.image || '')
+        .replace(/-500x500\.jpg|-150x150\.jpg|-50x50\.jpg/g, '')
+        .toLowerCase()
+        .trim();
+      const currentImgCount = coverCounts.get(imgKey) || 0;
+      if (imgKey && currentImgCount >= maxPerCover) continue;
 
-    // Check clean movie / album name
-    const movieKey = (song.movie || '')
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, '')
-      .slice(0, 16);
-    const currentMovieCount = movieCounts.get(movieKey) || 0;
-    if (movieKey && movieKey.length >= 3 && maxPerCover && currentMovieCount >= maxPerCover) continue;
+      const movieKey = (song.movie || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '')
+        .slice(0, 16);
+      const currentMovieCount = movieCounts.get(movieKey) || 0;
+      if (movieKey && movieKey.length >= 3 && currentMovieCount >= maxPerCover) continue;
+
+      if (imgKey) coverCounts.set(imgKey, currentImgCount + 1);
+      if (movieKey && movieKey.length >= 3) movieCounts.set(movieKey, currentMovieCount + 1);
+    }
 
     seenIds.add(song.id);
     if (key) seenKeys.add(key);
-    if (imgKey) coverCounts.set(imgKey, currentImgCount + 1);
-    if (movieKey && movieKey.length >= 3) movieCounts.set(movieKey, currentMovieCount + 1);
     unique.push(song);
   }
   return unique;
+}
+
+// Regex to identify remixes, DJ tracks, covers, lofi flips, and non-original cuts
+const REMIX_KEYWORDS_REGEX = /\b(remix|dance mix|circuit mix|club mix|party mix|lofi|l-o-f-i|slowed|reverb|mashup|\bdj\b|dj\s|cover|reloaded|unplugged|acoustic|instrumental|karaoke|ringtone|bass boosted|sped up|speed up|recreated|trap mix|dubstep|tribute|parody|flip|drill mix|synthwave|edm|teaser|trailer|promo|short version)\b/i;
+
+// Originality & Relevance Scoring Algorithm: promotes official original soundtracks and deprioritizes remixes/covers
+function scoreAndRankSongs(songs, query) {
+  const q = (query || '').toLowerCase().trim();
+  const isQueryAskingForRemix = REMIX_KEYWORDS_REGEX.test(q);
+  const cleanQ = q.replace(/[^a-z0-9\s]/g, '').trim();
+
+  return [...songs].map(song => {
+    const title = (song.title || '').toLowerCase();
+    const rawAlbum = (song.movie || song.album || '').toLowerCase();
+    const music = (song.music || '').toLowerCase();
+    const singers = (song.singers || '').toLowerCase();
+
+    const isRemixOrCover = REMIX_KEYWORDS_REGEX.test(title) || REMIX_KEYWORDS_REGEX.test(rawAlbum);
+
+    let score = 0;
+
+    // 1. Heavy penalty for remixes/covers/lofi/teasers when query didn't ask for them
+    if (isRemixOrCover && !isQueryAskingForRemix) {
+      score -= 2000;
+    }
+
+    // 2. Base title match without parenthetical clutter like '(From "Movie")'
+    const baseTitle = title
+      .replace(/\s*[\(\[](from|movie|film|original|audio).*?[\)\]]/gi, '')
+      .replace(/[^a-z0-9\s]/g, '')
+      .trim();
+
+    if (baseTitle === cleanQ) {
+      score += 600;
+    } else if (baseTitle.startsWith(cleanQ)) {
+      score += 350;
+    } else if (baseTitle.includes(cleanQ)) {
+      score += 150;
+    }
+
+    // 3. Official movie soundtrack bonus
+    if (rawAlbum.includes('original motion picture soundtrack') || rawAlbum.includes('ost')) {
+      score += 250;
+    }
+
+    // 4. Authentic movie album bonus: if album differs from song title and isn't a remix, it's a real OST
+    if (rawAlbum && !rawAlbum.includes(baseTitle) && !REMIX_KEYWORDS_REGEX.test(rawAlbum)) {
+      score += 150;
+    }
+
+    // 5. Query matches the movie/album directly (e.g. searching "Pushpa 2" or "Brahmastra")
+    if (rawAlbum.includes(cleanQ)) {
+      score += 250;
+    }
+
+    // 6. Query matches artist or composer (e.g. "Arijit", "Anirudh", "Pritam")
+    if (singers.includes(cleanQ) || music.includes(cleanQ)) {
+      score += 200;
+    }
+
+    // 7. Penalize third-party generic compilation albums
+    if (/\b(top 10|top 20|best of|all time hits|romantic hits|celebrations|special|waves|monsoon|dhamaka|collection|party all night)\b/i.test(rawAlbum)) {
+      score -= 300;
+    }
+
+    // 8. Audio 320kbps bonus
+    if (song.audio_320) {
+      score += 50;
+    }
+
+    return { song, score };
+  })
+  .sort((a, b) => b.score - a.score)
+  .map(item => item.song);
 }
 
 // Convert JioSaavn song object to normalized format
@@ -270,13 +346,13 @@ const CURATED_QUERIES = [
 ];
 
 const INDUSTRIES = [
-  { id: 'all', title: '🌐 All India (Pan-India)', desc: 'Mega chartbusters across Bollywood, Tollywood, Kollywood & Sandalwood' },
-  { id: 'hindi', title: '👑 Bollywood (Hindi)', desc: 'Stree 2, Animal, Jawan, Arijit Singh, Pritam' },
-  { id: 'tamil', title: '⚡ Kollywood (Tamil)', desc: 'Leo, Jailer, Vikram, Anirudh, AR Rahman' },
-  { id: 'telugu', title: '🦁 Tollywood (Telugu)', desc: 'Pushpa 2, Devara, RRR, Kalki 2898 AD, Guntur Kaaram' },
-  { id: 'kannada', title: '🌲 Sandalwood (Kannada)', desc: 'KGF 1 & 2, Kantara, Salaar, Ravi Basrur, Sanjith Hegde' },
-  { id: 'malayalam', title: '🌊 Mollywood (Malayalam)', desc: 'Aavesham, Manjummel Boys, Premalu, Sushin Shyam' },
-  { id: 'punjabi', title: '🚀 Punjabi & Pop Hits', desc: 'Diljit Dosanjh, Karan Aujla, AP Dhillon' }
+  { id: 'all', title: 'All India', desc: 'Mega chartbusters across Bollywood, Tollywood, Kollywood & Sandalwood' },
+  { id: 'hindi', title: 'Bollywood (Hindi)', desc: 'Stree 2, Animal, Jawan, Arijit Singh, Pritam' },
+  { id: 'tamil', title: 'Kollywood (Tamil)', desc: 'Leo, Jailer, Vikram, Anirudh, AR Rahman' },
+  { id: 'telugu', title: 'Tollywood (Telugu)', desc: 'Pushpa 2, Devara, RRR, Kalki 2898 AD, Guntur Kaaram' },
+  { id: 'kannada', title: 'Sandalwood (Kannada)', desc: 'KGF 1 & 2, Kantara, Salaar, Ravi Basrur, Sanjith Hegde' },
+  { id: 'malayalam', title: 'Mollywood (Malayalam)', desc: 'Aavesham, Manjummel Boys, Premalu, Sushin Shyam' },
+  { id: 'punjabi', title: 'Punjabi & Pop Hits', desc: 'Diljit Dosanjh, Karan Aujla, AP Dhillon' }
 ];
 
 const INDUSTRY_QUERIES = {
@@ -373,41 +449,42 @@ async function getTrendingSongs(industry = 'all') {
 
 // Pre-fill categories, moods, and singer collections
 const MOODS = [
-  { id: 'melody', title: '💖 Melody Magic', desc: 'Soulful & calming melodies across languages', icon: '💖', queries: ['Telugu Melody Hits', 'Arijit Singh Melodies', 'Anirudh Melodies Tamil', 'Singara Siriye'] },
-  { id: 'energetic', title: '⚡ High Energy & Mass', desc: 'High-voltage dance & party anthems', icon: '⚡', queries: ['Telugu Mass Songs', 'Aayi Nai Stree 2', 'Naa Ready Leo', 'Tauba Tauba', 'Kurchi Madathapetti'] },
-  { id: 'anger', title: '🔥 Anger & Fierce Action', desc: 'Roaring action, fury & intense hero themes', icon: '🔥', queries: ['Fear Song Telugu', 'Animal Arjan Vailly', 'Hukum Jailer', 'KGF 2 Toofan', 'Akhanda'] },
-  { id: 'gym', title: '💪 Gym & Workout Pump', desc: 'Adrenaline pumping workout & heavy bass motivation', icon: '💪', queries: ['Telugu Workout Songs', 'Beast Mode Anirudh', 'Sultan KGF', 'Zinda Bhaag Milkha', 'Baahubali Dheevara'] },
-  { id: 'motivation', title: '🎯 Motivation & Rise', desc: 'Inspirational anthems to conquer all odds', icon: '🎯', queries: ['Kar Har Maidaan Fateh', 'Chalore Chalore Chal', 'Aaluma Doluma', 'Srimanthudu Jaago', 'Believer'] },
-  { id: 'love', title: '🌹 Love & Romance', desc: 'Magical love duets and sweet romantic tunes', icon: '🌹', queries: ['Kesariya Brahmastra', 'Chuttamalle Devara', 'Chaleya Jawan', 'Anbenum Leo', 'Pehle Bhi Main'] },
-  { id: 'breakup', title: '💔 Breakup & Pain', desc: 'Heart-touching melancholy & emotional depth', icon: '💔', queries: ['Channa Mereya', 'Telugu Breakup Songs', 'My Love Is Gone', 'Agar Tum Saath Ho', 'Kanave Kanave'] }
+  { id: 'melody', title: 'Melody', desc: 'Soulful & calming melodies across languages', icon: '', queries: ['Telugu Melody Hits', 'Arijit Singh Melodies', 'Anirudh Melodies Tamil', 'Singara Siriye'] },
+  { id: 'energetic', title: 'High Energy', desc: 'High-voltage dance & party anthems', icon: '', queries: ['Telugu Mass Songs', 'Aayi Nai Stree 2', 'Naa Ready Leo', 'Tauba Tauba', 'Kurchi Madathapetti'] },
+  { id: 'anger', title: 'Action & Fierce', desc: 'Roaring action, fury & intense hero themes', icon: '', queries: ['Fear Song Telugu', 'Animal Arjan Vailly', 'Hukum Jailer', 'KGF 2 Toofan', 'Akhanda'] },
+  { id: 'gym', title: 'Gym & Workout', desc: 'Adrenaline pumping workout & heavy bass motivation', icon: '', queries: ['Telugu Workout Songs', 'Beast Mode Anirudh', 'Sultan KGF', 'Zinda Bhaag Milkha', 'Baahubali Dheevara'] },
+  { id: 'motivation', title: 'Motivational', desc: 'Inspirational anthems to conquer all odds', icon: '', queries: ['Kar Har Maidaan Fateh', 'Chalore Chalore Chal', 'Aaluma Doluma', 'Srimanthudu Jaago', 'Believer'] },
+  { id: 'love', title: 'Love & Romance', desc: 'Magical love duets and sweet romantic tunes', icon: '', queries: ['Kesariya Brahmastra', 'Chuttamalle Devara', 'Chaleya Jawan', 'Anbenum Leo', 'Pehle Bhi Main'] },
+  { id: 'breakup', title: 'Breakup & Melancholy', desc: 'Heart-touching melancholy & emotional depth', icon: '', queries: ['Channa Mereya', 'Telugu Breakup Songs', 'My Love Is Gone', 'Agar Tum Saath Ho', 'Kanave Kanave'] },
+  { id: 'classics', title: 'Evergreen Classics', desc: 'Timeless 90s and 2000s nostalgic masterworks', icon: '', queries: ['Kushi Pawan Kalyan', 'Pokiri Songs', 'Okkadu Songs', 'Athadu Telugu Songs', 'Roja Tamil Songs'] }
 ];
 
 const SINGERS = [
   // Bollywood & Pan-India
-  { id: 'arijit', name: 'Arijit Singh', title: '👑 Arijit Singh Anthems', role: 'King of Soul', desc: 'Kesariya, Channa Mereya, Chaleya, Heeriye', queries: ['Arijit Singh Hits', 'Arijit Singh Romantic Songs', 'Chaleya Jawan'] },
-  { id: 'pritam', name: 'Pritam', title: '🎸 Pritam Musical Magic', role: 'Bollywood Hit Machine', desc: 'Brahmastra, Yeh Jawaani Hai Deewani, Ae Dil Hai Mushkil', queries: ['Pritam Hindi Hits', 'Pritam Blockbusters'] },
-  { id: 'ar_rahman', name: 'A. R. Rahman', title: '🏆 A. R. Rahman Epics', role: 'The Mozart of Madras', desc: 'Roja, Rockstar, Ponniyin Selvan, Dil Se', queries: ['AR Rahman Hits', 'AR Rahman Tamil Hits', 'AR Rahman Hindi Hits'] },
-  { id: 'shreya', name: 'Shreya Ghoshal', title: '🌸 Shreya Ghoshal', role: 'Queen of Melody', desc: 'Ami Je Tomar, Sooseki, Deewani Mastani, Ghal Ghal', queries: ['Shreya Ghoshal Hits', 'Shreya Ghoshal Hindi', 'Shreya Ghoshal Telugu'] },
-  { id: 'diljit', name: 'Diljit Dosanjh', title: '🔥 Diljit Dosanjh Vibe', role: 'Global Icon', desc: 'Lover, Born to Shine, Naina (Crew), Hass Hass', queries: ['Diljit Dosanjh Hits', 'Lover Diljit Dosanjh', 'Naina Crew'] },
-  { id: 'karan_aujla', name: 'Karan Aujla', title: '🚀 Karan Aujla Fire', role: 'Pop & Rap Sensation', desc: 'Tauba Tauba, Softly, Winning Speech', queries: ['Tauba Tauba Karan Aujla', 'Karan Aujla Hits'] },
+  { id: 'arijit', name: 'Arijit Singh', title: 'Arijit Singh Hits', role: 'King of Soul', desc: 'Kesariya, Channa Mereya, Chaleya, Heeriye', queries: ['Arijit Singh Hits', 'Arijit Singh Romantic Songs', 'Chaleya Jawan'] },
+  { id: 'pritam', name: 'Pritam', title: 'Pritam Blockbusters', role: 'Bollywood Hit Machine', desc: 'Brahmastra, Yeh Jawaani Hai Deewani, Ae Dil Hai Mushkil', queries: ['Pritam Hindi Hits', 'Pritam Blockbusters'] },
+  { id: 'ar_rahman', name: 'A. R. Rahman', title: 'A. R. Rahman Epics', role: 'The Mozart of Madras', desc: 'Roja, Rockstar, Ponniyin Selvan, Dil Se', queries: ['AR Rahman Hits', 'AR Rahman Tamil Hits', 'AR Rahman Hindi Hits'] },
+  { id: 'shreya', name: 'Shreya Ghoshal', title: 'Shreya Ghoshal Melodies', role: 'Queen of Melody', desc: 'Ami Je Tomar, Sooseki, Deewani Mastani, Ghal Ghal', queries: ['Shreya Ghoshal Hits', 'Shreya Ghoshal Hindi', 'Shreya Ghoshal Telugu'] },
+  { id: 'diljit', name: 'Diljit Dosanjh', title: 'Diljit Dosanjh Hits', role: 'Global Icon', desc: 'Lover, Born to Shine, Naina (Crew), Hass Hass', queries: ['Diljit Dosanjh Hits', 'Lover Diljit Dosanjh', 'Naina Crew'] },
+  { id: 'karan_aujla', name: 'Karan Aujla', title: 'Karan Aujla Hits', role: 'Pop & Rap Sensation', desc: 'Tauba Tauba, Softly, Winning Speech', queries: ['Tauba Tauba Karan Aujla', 'Karan Aujla Hits'] },
   
   // Kollywood
-  { id: 'anirudh', name: 'Anirudh Ravichander', title: '🎧 Anirudh Rockstar', role: 'Pan-Indian Phenomenon', desc: 'Leo, Jailer, Devara, Vikram, Master, Jawan', queries: ['Anirudh Tamil Hits', 'Devara Telugu Anirudh', 'Leo Badass', 'Hukum Jailer'] },
-  { id: 'yuvan', name: 'Yuvan Shankar Raja', title: '⚡ Yuvan Drugs', role: 'Youth Icon', desc: 'Mankatha, Paiyaa, GOAT, Pudhupettai', queries: ['Yuvan Shankar Raja Hits', 'Yuvan Shankar Raja Tamil'] },
+  { id: 'anirudh', name: 'Anirudh Ravichander', title: 'Anirudh Ravichander Hits', role: 'Pan-Indian Phenomenon', desc: 'Leo, Jailer, Devara, Vikram, Master, Jawan', queries: ['Anirudh Tamil Hits', 'Devara Telugu Anirudh', 'Leo Badass', 'Hukum Jailer'] },
+  { id: 'yuvan', name: 'Yuvan Shankar Raja', title: 'Yuvan Shankar Raja Hits', role: 'Youth Icon', desc: 'Mankatha, Paiyaa, GOAT, Pudhupettai', queries: ['Yuvan Shankar Raja Hits', 'Yuvan Shankar Raja Tamil'] },
 
   // Sandalwood
-  { id: 'ravi_basrur', name: 'Ravi Basrur', title: '🌲 Ravi Basrur Roar', role: 'Sandalwood Kingpin', desc: 'KGF Chapter 1 & 2, Salaar, Kabzaa', queries: ['Ravi Basrur KGF', 'KGF Toofan', 'Salaar Ravi Basrur'] },
-  { id: 'sanjith_hegde', name: 'Sanjith Hegde', title: '✨ Sanjith Hegde Melodies', role: 'Sensational Voice', desc: 'Kannada, Tamil & Telugu hit songs', queries: ['Sanjith Hegde Hits', 'Sanjith Hegde Kannada'] },
+  { id: 'ravi_basrur', name: 'Ravi Basrur', title: 'Ravi Basrur Anthems', role: 'Sandalwood Kingpin', desc: 'KGF Chapter 1 & 2, Salaar, Kabzaa', queries: ['Ravi Basrur KGF', 'KGF Toofan', 'Salaar Ravi Basrur'] },
+  { id: 'sanjith_hegde', name: 'Sanjith Hegde', title: 'Sanjith Hegde Melodies', role: 'Sensational Voice', desc: 'Kannada, Tamil & Telugu hit songs', queries: ['Sanjith Hegde Hits', 'Sanjith Hegde Kannada'] },
 
   // Mollywood
-  { id: 'sushin_shyam', name: 'Sushin Shyam', title: '🌊 Sushin Shyam Wave', role: 'Mollywood Trailblazer', desc: 'Aavesham (Illuminati), Manjummel Boys, Romancham', queries: ['Sushin Shyam Hits', 'Aavesham Illuminati', 'Manjummel Boys'] },
+  { id: 'sushin_shyam', name: 'Sushin Shyam', title: 'Sushin Shyam Hits', role: 'Mollywood Trailblazer', desc: 'Aavesham (Illuminati), Manjummel Boys, Romancham', queries: ['Sushin Shyam Hits', 'Aavesham Illuminati', 'Manjummel Boys'] },
 
   // Tollywood
-  { id: 'thaman', name: 'Thaman S', title: '👑 Thaman Musical Storm', role: 'Chartbuster Maestro', desc: 'Ala Vaikunthapurramuloo, Guntur Kaaram, Akhanda', queries: ['Thaman Telugu Songs', 'Thaman S Hits', 'Ala Vaikunthapurramuloo'] },
-  { id: 'dsp', name: 'Devi Sri Prasad (DSP)', title: '⚡ Rockstar DSP', role: 'High Energy King', desc: 'Pushpa 2, Waltair Veerayya, Arya 2, Rangasthalam', queries: ['Devi Sri Prasad Telugu Hits', 'Pushpa 2 Telugu', 'Waltair Veerayya'] },
-  { id: 'sid_sriram', name: 'Sid Sriram', title: '🎤 Sid Sriram Melodies', role: 'Soulful Vocalist', desc: 'Inkem Inkem, Samajavaragamana, Srivalli, Kadhaippoma', queries: ['Sid Sriram Hits', 'Inkem Inkem', 'Samajavaragamana'] },
-  { id: 'sai_abhyankkar', name: 'Sai Abhyankkar', title: '✨ Sai Abhyankkar Hits', role: 'Viral Sensation', desc: 'Katchi Sera, Aasa Kooda & indie pop hits', queries: ['Sai Abhyankkar', 'Katchi Sera', 'Aasa Kooda'] },
-  { id: 'spb', name: 'S. P. Balasubrahmanyam', title: '🎙️ SPB Immortal Hits', role: 'Legendary Maestro', desc: 'Timeless classics across all Indian languages', queries: ['SP Balasubrahmanyam Golden Hits', 'SPB Evergreen Hits'] }
+  { id: 'thaman', name: 'Thaman S', title: 'Thaman S Hits', role: 'Chartbuster Maestro', desc: 'Ala Vaikunthapurramuloo, Guntur Kaaram, Akhanda', queries: ['Thaman Telugu Songs', 'Thaman S Hits', 'Ala Vaikunthapurramuloo'] },
+  { id: 'dsp', name: 'Devi Sri Prasad (DSP)', title: 'Devi Sri Prasad Hits', role: 'High Energy King', desc: 'Pushpa 2, Waltair Veerayya, Arya 2, Rangasthalam', queries: ['Devi Sri Prasad Telugu Hits', 'Pushpa 2 Telugu', 'Waltair Veerayya'] },
+  { id: 'sid_sriram', name: 'Sid Sriram', title: 'Sid Sriram Melodies', role: 'Soulful Vocalist', desc: 'Inkem Inkem, Samajavaragamana, Srivalli, Kadhaippoma', queries: ['Sid Sriram Hits', 'Inkem Inkem', 'Samajavaragamana'] },
+  { id: 'sai_abhyankkar', name: 'Sai Abhyankkar', title: 'Sai Abhyankkar Hits', role: 'Viral Sensation', desc: 'Katchi Sera, Aasa Kooda & indie pop hits', queries: ['Sai Abhyankkar', 'Katchi Sera', 'Aasa Kooda'] },
+  { id: 'spb', name: 'S. P. Balasubrahmanyam', title: 'SPB Immortal Classics', role: 'Legendary Maestro', desc: 'Timeless classics across all Indian languages', queries: ['SP Balasubrahmanyam Golden Hits', 'SPB Evergreen Hits'] }
 ];
 
 const STAR_HEROES = [
@@ -429,13 +506,13 @@ const ALL_CATEGORIES = [
   ...MOODS,
   ...INDUSTRIES.map(ind => ({ id: `ind_${ind.id}`, title: ind.title, desc: ind.desc, queries: INDUSTRY_QUERIES[ind.id] || INDUSTRY_QUERIES.all })),
   ...SINGERS.map(s => ({ id: s.id, title: s.title, desc: s.desc, queries: s.queries })),
-  { id: 'trending', title: '🔥 Pan-India Trending', desc: 'Hottest songs across India right now', queries: INDUSTRY_QUERIES.all },
-  { id: 'telugu_hits', title: '🦁 Tollywood Chartbusters (Telugu)', desc: 'Top Telugu movie soundtracks', queries: INDUSTRY_QUERIES.telugu },
-  { id: 'bollywood_hits', title: '👑 Bollywood Blockbusters (Hindi)', desc: 'Top Hindi movie soundtracks', queries: INDUSTRY_QUERIES.hindi },
-  { id: 'kollywood_hits', title: '⚡ Kollywood Explosions (Tamil)', desc: 'Top Tamil movie soundtracks', queries: INDUSTRY_QUERIES.tamil },
-  { id: 'sandalwood_hits', title: '🌲 Sandalwood Fire (Kannada)', desc: 'KGF, Kantara & Kannada hits', queries: INDUSTRY_QUERIES.kannada },
-  { id: 'mollywood_hits', title: '🌊 Mollywood Vibes (Malayalam)', desc: 'Aavesham, Manjummel Boys & Malayalam magic', queries: INDUSTRY_QUERIES.malayalam },
-  { id: 'punjabi_hits', title: '🚀 Punjabi Pop & Beats', desc: 'Diljit, Karan Aujla & Punjabi fire', queries: INDUSTRY_QUERIES.punjabi }
+  { id: 'trending', title: 'Pan-India Trending', desc: 'Hottest songs across India right now', queries: INDUSTRY_QUERIES.all },
+  { id: 'telugu_hits', title: 'Tollywood Blockbusters (Telugu)', desc: 'Top Telugu movie soundtracks', queries: INDUSTRY_QUERIES.telugu },
+  { id: 'bollywood_hits', title: 'Bollywood Blockbusters (Hindi)', desc: 'Top Hindi movie soundtracks', queries: INDUSTRY_QUERIES.hindi },
+  { id: 'kollywood_hits', title: 'Kollywood Hits (Tamil)', desc: 'Top Tamil movie soundtracks', queries: INDUSTRY_QUERIES.tamil },
+  { id: 'sandalwood_hits', title: 'Sandalwood Hits (Kannada)', desc: 'KGF, Kantara & Kannada hits', queries: INDUSTRY_QUERIES.kannada },
+  { id: 'mollywood_hits', title: 'Mollywood Vibes (Malayalam)', desc: 'Aavesham, Manjummel Boys & Malayalam magic', queries: INDUSTRY_QUERIES.malayalam },
+  { id: 'punjabi_hits', title: 'Punjabi Pop & Beats', desc: 'Diljit, Karan Aujla & Punjabi fire', queries: INDUSTRY_QUERIES.punjabi }
 ];
 
 const CATEGORIES = ALL_CATEGORIES;
@@ -731,7 +808,7 @@ const server = http.createServer(async (req, res) => {
       searchQuery = `${searchQuery} ${lang}`;
     }
 
-    const data = await fetchSaavn(`__call=search.getResults&p=1&n=40&q=${encodeURIComponent(searchQuery)}`);
+    const data = await fetchSaavn(`__call=search.getResults&p=1&n=50&q=${encodeURIComponent(searchQuery)}`);
     let rawSongs = (data?.results || []).map(formatSong).filter(s => s && s.audio_320);
     if (lang && lang !== 'all') {
       rawSongs = rawSongs.filter(s => {
@@ -739,7 +816,12 @@ const server = http.createServer(async (req, res) => {
         return !sl || sl.includes(lang);
       });
     }
-    const songs = dedupeSongs(rawSongs);
+
+    // Rank songs by originality and true match relevance (prioritizing official original soundtracks over remixes/covers)
+    rawSongs = scoreAndRankSongs(rawSongs, query);
+
+    // Deduplicate identical duplicate tracks (allowing multiple songs from the same movie soundtrack)
+    const songs = dedupeSongs(rawSongs, null, null);
 
     // Also fetch albums
     const albumData = await fetchSaavn(`__call=search.getAlbumResults&p=1&n=10&q=${encodeURIComponent(searchQuery)}`);

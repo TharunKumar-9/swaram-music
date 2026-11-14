@@ -2486,27 +2486,27 @@ function renderSpotifyGreetingAndQuickPicks() {
       action: () => switchTab('playlists')
     },
     {
-      title: '🦁 Tollywood Chartbusters',
+      title: 'Tollywood Blockbusters',
       art: 'https://c.saavncdn.com/366/Pushpa-2-The-Rule-Telugu-Telugu-2024-20241205211012-500x500.jpg',
       action: () => openCategoryDetail('telugu_hits')
     },
     {
-      title: '👑 Bollywood Blockbusters',
+      title: 'Bollywood Blockbusters',
       art: 'https://c.saavncdn.com/373/Stree-2-Hindi-2024-20240828083834-500x500.jpg',
       action: () => openCategoryDetail('bollywood_hits')
     },
     {
-      title: '⚡ Kollywood Thunder',
+      title: 'Kollywood Hits',
       art: 'https://c.saavncdn.com/415/Leo-Original-Motion-Picture-Soundtrack-English-2023-20231019170311-500x500.jpg',
       action: () => openCategoryDetail('kollywood_hits')
     },
     {
-      title: '💖 Soulful Melodies',
+      title: 'Soulful Melodies',
       art: 'https://c.saavncdn.com/353/Prema-Kavithalu-2026-Valentines-Day-Special-Telugu-2026-20260212201005-500x500.jpg',
       action: () => openCategoryDetail('melody')
     },
     {
-      title: '🕒 Recently Played',
+      title: 'Recently Played',
       art: 'https://c.saavncdn.com/979/Devara-Part-1-Telugu-Telugu-2024-20240927063116-500x500.jpg',
       action: () => switchTab('history')
     }
@@ -3192,14 +3192,14 @@ async function loadCategories() {
     });
   }
 
-  // 2. Moods & Song Types (Melody, Energetic, Anger, Gym, Motivation, Love, Breakup)
+  // 2. Moods & Song Types (Melody, High Energy, Action, Gym, Motivational, Romance, Breakup)
   if (moodChipsBar && res.moods) {
     moodChipsBar.innerHTML = '';
     res.moods.forEach((m) => {
       const chip = document.createElement('button');
       chip.className = 'category-chip';
       chip.setAttribute('data-mood', m.id);
-      chip.innerHTML = `<span>${m.icon || '🎶'}</span> <span>${m.title}</span>`;
+      chip.innerHTML = `<span>${m.title}</span>`;
       chip.addEventListener('click', () => {
         document.querySelectorAll('#mood-chips .category-chip').forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
@@ -3215,7 +3215,7 @@ async function loadCategories() {
     res.singers.forEach((s) => {
       const chip = document.createElement('button');
       chip.className = 'category-chip';
-      chip.innerHTML = `<span>🎤</span> <span>${s.name}</span>`;
+      chip.innerHTML = `<span>${s.name}</span>`;
       chip.addEventListener('click', () => {
         document.querySelectorAll('#singer-chips .category-chip').forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
